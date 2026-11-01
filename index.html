@@ -149,7 +149,7 @@ body.player-mode #playerApp { display:block; }
         <div class="guess-feedback" id="guessFeedback" aria-live="polite">Enter your answer in English or Japanese. <span class="jp">/ 英語または日本語で入力してください。</span></div>
         <div class="strikes" id="strikes">❌ Strikes <span class="jp">/ ミス</span>: 0 / 3</div>
         <div class="answers" id="answers"></div>
-        <div class="footer-actions"><button class="btn-muted" id="switchBtn">Switch team <span class="jp">/ 交代</span></button><button class="btn-primary" id="nextBtn">Next question <span class="jp">/ 次の問題</span> →</button></div>
+        <div class="footer-actions"><button class="btn-muted" id="nextPlayerBtn">Next player ⏭ <span class="jp">/ 次の人</span></button><button class="btn-primary" id="nextBtn">Next question <span class="jp">/ 次の問題</span> →</button></div>
         <div class="small-note">The website is the host. / ウェブサイトが司会をします。 English and Japanese answers are accepted. / 英語・日本語どちらも回答できます。</div>
       </div>
       <aside class="panel">
@@ -307,7 +307,7 @@ $('saveQuestion').onclick=()=>{const i=Number($('editRound').value);const q=$('e
 $('editRound').value=String(roundIndex);
 $('languageBtn').onclick=()=>{translationOn=!translationOn;document.getElementById('app').classList.toggle('show-jp',translationOn);$('languageBtn').textContent=translationOn?'日本語表示 / Show Japanese: ON':'日本語表示 / Show Japanese: OFF';$('languageBtn').setAttribute('aria-pressed',String(translationOn));render();};
 $('guessForm').addEventListener('submit',event=>{event.preventDefault();submitGuess($('guessInput').value);$('guessInput').value='';$('guessInput').focus();});
-$('switchBtn').onclick=switchTeam;$('nextBtn').onclick=nextRound;
+$('nextBtn').onclick=nextRound;
 $('wordPower').onclick=()=>usePower('word');$('picturePower').onclick=()=>usePower('picture');$('choicePower').onclick=()=>usePower('choice');
 $('rulesBtn').onclick=()=>openModal('How to play',`<p><b>1.</b> Split into two teams. The highlighted team answers first.</p><p><b>2.</b> Read the question aloud. Click an answer tile to reveal it and add its points.</p><p><b>3.</b> If your team gets stuck, use one of the three hint powers. Each team can use each power only once for the entire game.</p><p><b>4.</b> Click “Switch team turn” to pass the turn. Click “Next question” when the round is finished.</p><p><b>5.</b> Highest score after 10 questions wins. Japanese answers are okay!</p><p><b>Host note:</b> These are sample survey-style points for party play, not results from a real survey.</p>`);
 $('resetBtn').onclick=()=>{roundIndex=0;scores=[0,0];activeTeam=0;revealed=new Set();used=[new Set(),new Set()];strikes=0;guessed=new Set();render();$('hintBox').classList.remove('show');$('guessInput').value='';$('guessFeedback').textContent='Type an answer and let the game check it!';};
@@ -394,23 +394,22 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
  if(viewerMode) return; // read-only viewer link
  const top=document.querySelector('.top-actions');
  const controls=document.createElement('div');
- controls.className='phase-card';controls.style.margin='0 0 16px';
- controls.innerHTML=`<b>👥 Player limits &amp; game phases</b>
+ controls.className='phase-card';
+ controls.innerHTML=`<b>👥 Players &amp; timer</b>
+  <div class="host-clock"><div class="big" id="hostClock">—</div><div id="hostPhaseName">Phase: waiting</div><button class="btn-primary" id="startPlanning">▶ Start 1-minute planning</button><button class="btn-outline" id="finishPhase">End game</button></div>
+  <div class="roster"><div id="rosterA">Team A: —</div><div id="rosterB">Team B: —</div></div>
+  <details style="margin-top:10px"><summary style="cursor:pointer;color:#d9cbea">Setup (player limits, link)</summary>
   <div class="host-settings">
    <label>Team A max<input id="limitA" type="number" min="1" max="30" value="6"></label>
    <label>Team B max<input id="limitB" type="number" min="1" max="30" value="6"></label>
    <button class="btn-muted" id="saveLimits">Save limits</button>
-   <button class="btn-primary" id="startPlanning">▶ Start 1-minute planning</button>
-   <button class="btn-primary" id="startAnswering">Skip to answering</button>
-   <button class="btn-muted" id="nextPlayer">Next player ⏭</button>
-   <button class="btn-outline" id="finishPhase">End game</button>
    <button class="btn-muted" id="copyPlayerLink">Copy player link</button>
    <button class="btn-outline" id="clearSession">Clear players &amp; chat</button>
-  </div>
-  <div class="host-clock"><div class="big" id="hostClock">—</div><div id="hostPhaseName">Phase: waiting</div></div>
-  <div class="roster"><div id="rosterA">Team A: —</div><div id="rosterB">Team B: —</div></div>
+  </div></details>
   <p id="hostPhaseStatus" class="small-note">Players join with the player link. Planning lasts 60 seconds, then each Team A player answers for 30 seconds each (automatically advancing), followed by every Team B player.</p>`;
- top.parentNode.insertBefore(controls,top.nextSibling);
+ controls.style.margin='16px 0 0';controls.style.padding='14px';
+ const footer=document.querySelector('.footer-actions');
+ footer.parentNode.insertBefore(controls,footer.nextSibling);   // sits right under Next player / Next question
 
  let cur={},lastHandledEnd=0;
  const updateSession=obj=>sessionRef.update({...obj,updatedAt:now()});
@@ -436,8 +435,8 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
   updateSession({limits:{A:Math.max(1,Math.min(30,Number($p('limitA').value)||1)),B:Math.max(1,Math.min(30,Number($p('limitB').value)||1))},phase:'planning',endsAt:now()+PLANNING_MS,activeTeam:null,activePlayer:null,activePlayerName:null,turnIndex:0});
   $p('hostPhaseStatus').textContent='Planning started: 60 seconds. Answering begins automatically.';
  };
- $p('startAnswering').onclick=()=>{lastHandledEnd=0;setTurn('A',0);};
- $p('nextPlayer').onclick=()=>{lastHandledEnd=0;setTurn(cur.activeTeam||'A',(Number(cur.turnIndex)||0)+1);};
+ // The main panel's "Next player" button: skips to the next player (moves to Team B / finishes automatically)
+ document.getElementById('nextPlayerBtn').onclick=()=>{lastHandledEnd=0;if(cur.phase==='answering')setTurn(cur.activeTeam||'A',(Number(cur.turnIndex)||0)+1);else if(cur.phase==='planning')setTurn('A',0);else setTurn('A',0);};
  $p('finishPhase').onclick=()=>updateSession({phase:'finished',endsAt:0,activeTeam:null,activePlayer:null,activePlayerName:null});
  $p('copyPlayerLink').onclick=async()=>{const u=new URL(location.href);u.search='';u.searchParams.set('player','1');try{await navigator.clipboard.writeText(u.href);$p('hostPhaseStatus').textContent='Player link copied.';}catch(e){prompt('Copy player link:',u.href);}};
  $p('clearSession').onclick=()=>{if(confirm('Remove all players, chat and phase state?'))sessionRef.remove().then(()=>{$p('hostPhaseStatus').textContent='Session cleared.';});};
