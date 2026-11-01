@@ -96,6 +96,35 @@ button:disabled { opacity:.38; cursor:not-allowed; }
 body.viewer #guessForm, body.viewer #guessFeedback, body.viewer #strikes, body.viewer .footer-actions, body.viewer aside, body.viewer #rulesBtn, body.viewer #resetBtn, body.viewer #editQuestionsBtn { display:none !important; }
 body.viewer #languageBtn { display:none !important; }
 @media(max-width:760px) { #app { padding:15px; } .game-grid { grid-template-columns:1fr; } .scoreboard { gap:7px; } .team { padding:11px 6px; } .team-controls button { padding:7px 9px; } .panel { padding:15px; } h1 { font-size:25px; } }
+
+/* ---------- Host phase panel & Player screen ---------- */
+.phase-card { background:#21182f; border:1px solid #49375e; border-radius:18px; padding:18px; margin:12px 0; }
+.phase-card input, .phase-card select { width:100%; padding:12px; border-radius:10px; border:1px solid #806c9c; margin:6px 0 12px; font:inherit; }
+.host-settings { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-top:10px; }
+.host-settings label { font-size:12px; color:#d9cbea; }
+.host-settings input { display:block; width:100px; padding:8px; border-radius:8px; margin:4px 0 0; }
+.host-clock { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:12px; padding:10px 14px; background:#3a2852; border-radius:12px; }
+.host-clock .big { font-size:30px; font-weight:900; color:#ffb46d; min-width:64px; }
+.roster { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; font-size:13px; color:#d9cbea; }
+.roster div { background:#171225; border-radius:10px; padding:8px 10px; }
+body.player-mode #app { display:none; }
+#playerApp { display:none; position:relative; z-index:2; max-width:760px; margin:0 auto; padding:18px; color:#fff8ed; background:#171225; min-height:100vh; }
+body.player-mode { background:#171225; }
+body.player-mode #playerApp { display:block; }
+.team-pick { display:flex; gap:10px; }
+.team-pick button { flex:1; padding:18px; }
+.chat-log { height:190px; overflow:auto; background:#171225; padding:10px; border-radius:10px; margin:10px 0; }
+.chat-line { padding:5px 0; border-bottom:1px solid #49375e; overflow-wrap:anywhere; }
+#chatForm { display:flex; gap:8px; }
+#chatForm input { margin:0; flex:1; }
+.player-hidden { display:none !important; }
+.p-scores { display:grid; grid-template-columns:1fr auto 1fr; gap:10px; margin:10px 0; }
+.p-scores .team { padding:8px; }
+.p-scores .score { font-size:30px; margin:2px 0; }
+.p-timer { text-align:center; background:#3a2852; border-radius:16px; padding:12px; margin:10px 0; }
+.p-timer .score { font-size:56px; margin:4px 0; }
+.p-timer.urgent .score { color:#ff7b7b; }
+.p-timer.mine { border:2px solid var(--site-secondary); }
 </style>
 </head>
 <body>
@@ -137,6 +166,42 @@ body.viewer #languageBtn { display:none !important; }
 </div>
 <div class="modal-backdrop" id="editorBackdrop"><div class="modal" style="max-height:90vh;overflow:auto"><h2>✏️ Edit Questions</h2><p>Changes are saved for all connected phones.</p><label for="editRound">Choose round</label><select id="editRound" style="display:block;width:100%;padding:11px;margin:7px 0 14px;border-radius:9px"><option value="0">Round 1</option></select><label for="editQuestion">Question (English)</label><input id="editQuestion" style="display:block;width:100%;padding:11px;margin:7px 0 12px;border-radius:9px"><label for="editQuestionJP">Question (Japanese, optional)</label><input id="editQuestionJP" style="display:block;width:100%;padding:11px;margin:7px 0 14px;border-radius:9px"><div id="answerEditor"></div><div class="modal-actions"><button class="btn-muted" id="cancelEditor">Cancel</button><button class="btn-primary" id="saveQuestion">Save Round</button></div></div></div>
 <div class="modal-backdrop" id="modalBackdrop"><div class="modal"><h2 id="modalTitle">How to play</h2><div id="modalBody"></div><div class="modal-actions"><button class="btn-primary" id="modalClose">Got it!</button></div></div></div>
+
+<!-- ================= PLAYER SCREEN (?player=1) ================= -->
+<div id="playerApp">
+  <h1>🎃 Halloween Feud</h1>
+  <section class="phase-card" id="joinCard">
+    <h2>Join your team / チームを選ぶ</h2>
+    <label for="playerName">Your name / 名前</label>
+    <input id="playerName" maxlength="24" placeholder="Enter your name">
+    <div class="team-pick"><button class="btn-primary" id="joinA">Join Team A</button><button class="btn-primary" id="joinB">Join Team B</button></div>
+    <p id="joinMessage" class="small-note"></p>
+  </section>
+  <section class="player-hidden" id="playerGame">
+    <div class="eyebrow" id="playerTeamLabel"></div>
+    <div class="p-scores">
+      <div class="team" id="pTeam0"><div class="team-name">Team A</div><div class="score" id="pScore0">0</div></div>
+      <div class="vs">VS</div>
+      <div class="team" id="pTeam1"><div class="team-name">Team B</div><div class="score" id="pScore1">0</div></div>
+    </div>
+    <div class="p-timer" id="pTimer">
+      <div class="eyebrow" id="phaseTitle">Waiting for host…</div>
+      <div class="score" id="phaseClock">—</div>
+      <div id="phaseMessage">The host will start the planning phase.</div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow" id="pRound"></div>
+      <div class="question" id="pQuestion"></div>
+      <div class="answers" id="pAnswers"></div>
+    </div>
+    <div class="phase-card">
+      <h3 style="margin:0">💬 Team chat</h3>
+      <div class="chat-log" id="chatLog"></div>
+      <form id="chatForm"><input id="chatInput" maxlength="300" placeholder="Message your team…" autocomplete="off"><button class="btn-primary" type="submit">Send</button></form>
+    </div>
+  </section>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script>
@@ -154,8 +219,12 @@ try {
   if (typeof firebase !== 'undefined' && firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
   if (typeof firebase !== 'undefined') roomRef = firebase.database().ref('rooms/halloween-feud-2026/state');
 } catch (error) { console.error('Firebase connection unavailable; editing will work on this device only.', error); }
-const viewerMode = new URLSearchParams(location.search).get('view') === '1';
+const urlParams = new URLSearchParams(location.search);
+const playerMode = urlParams.get('player') === '1';
+// Viewer and player screens are read-only: they never publish game state.
+const viewerMode = urlParams.get('view') === '1' || playerMode;
 if (viewerMode) document.body.classList.add('viewer');
+if (playerMode) document.body.classList.add('player-mode');
 
 const rounds = [
  {q:"Name something people see at Halloween.",a:[['Pumpkin',30,'Carving'],['Ghost',25,'White sheet'],['Witch',20,'Broom'],['Costume',15,'Dress up'],['Spider',10,'Web']]},
@@ -243,6 +312,156 @@ $('wordPower').onclick=()=>usePower('word');$('picturePower').onclick=()=>usePow
 $('rulesBtn').onclick=()=>openModal('How to play',`<p><b>1.</b> Split into two teams. The highlighted team answers first.</p><p><b>2.</b> Read the question aloud. Click an answer tile to reveal it and add its points.</p><p><b>3.</b> If your team gets stuck, use one of the three hint powers. Each team can use each power only once for the entire game.</p><p><b>4.</b> Click “Switch team turn” to pass the turn. Click “Next question” when the round is finished.</p><p><b>5.</b> Highest score after 10 questions wins. Japanese answers are okay!</p><p><b>Host note:</b> These are sample survey-style points for party play, not results from a real survey.</p>`);
 $('resetBtn').onclick=()=>{roundIndex=0;scores=[0,0];activeTeam=0;revealed=new Set();used=[new Set(),new Set()];strikes=0;guessed=new Set();render();$('hintBox').classList.remove('show');$('guessInput').value='';$('guessFeedback').textContent='Type an answer and let the game check it!';};
 if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const local=JSON.parse(localStorage.getItem('halloweenFeudCustomRounds')||'null');if(Array.isArray(local)){customRounds=local;loadedFromFirebase=true;}}catch(error){}};if(roomRef){roomRef.once('value').then(snapshot=>{const saved=snapshot.val();if(saved&&Array.isArray(saved.customRounds)){customRounds=saved.customRounds;loadedFromFirebase=true;customRounds.forEach((r,i)=>{r.qJP=r.qJP||questionJPFallback(i);r.a.forEach(a=>{if(a.length<4)a.push('');});});}else loadLocal();render();}).catch(error=>{console.error('Could not load saved questions:',error);loadLocal();render();});}else{loadLocal();render();}}
+</script>
+
+<script>
+/* ============ Phases, timers, player screen & team chat ============ */
+(()=>{
+ const PLANNING_MS=60000, TURN_MS=30000;
+ const sessionRef=roomRef&&roomRef.parent.child('session'), playersRef=sessionRef&&sessionRef.child('players');
+ const $p=id=>document.getElementById(id);
+ let myTeam=null,myName='',myKey='',sessionData={},chatRef=null,serverOffset=0;
+ const now=()=>Date.now()+serverOffset;
+ function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+ if(!sessionRef){ if(playerMode) $p('joinMessage').textContent='Could not connect to the game server.'; return; }
+ try{ firebase.database().ref('.info/serverTimeOffset').on('value',s=>{serverOffset=s.val()||0;}); }catch(e){}
+
+ /* ---------------- PLAYER SCREEN ---------------- */
+ if(playerMode){
+  const playerMessage=msg=>{$p('joinMessage').textContent=msg;};
+  const enterGame=()=>{$p('joinCard').classList.add('player-hidden');$p('playerGame').classList.remove('player-hidden');$p('playerTeamLabel').textContent='TEAM '+myTeam+' · '+myName;watchChat();};
+  function join(team){
+   myName=$p('playerName').value.trim();
+   if(!myName){playerMessage('Please enter your name first.');return;}
+   playersRef.once('value').then(s=>{
+    const all=s.val()||{};
+    const count=Object.values(all).filter(x=>x.team===team).length;
+    const limit=Number(sessionData.limits?.[team]||6);
+    if(count>=limit){playerMessage('This team is full. Choose the other team.');return;}
+    const key=playersRef.push().key;myKey=key;myTeam=team;
+    playersRef.child(key).set({name:myName,team,joinedAt:now()});
+    try{localStorage.setItem('hf_player_key',key);localStorage.setItem('hf_player_name',myName);localStorage.setItem('hf_player_team',team);}catch(e){}
+    enterGame();
+   });
+  }
+  $p('joinA').onclick=()=>join('A');$p('joinB').onclick=()=>join('B');
+  function watchChat(){
+   if(chatRef)chatRef.off();
+   chatRef=sessionRef.child('chat').child(myTeam);
+   chatRef.limitToLast(60).on('value',s=>{
+    const data=s.val()||{};
+    $p('chatLog').innerHTML=Object.values(data).map(m=>'<div class="chat-line"><b>'+escapeHtml(m.name)+'</b>: '+escapeHtml(m.text)+'</div>').join('');
+    $p('chatLog').scrollTop=$p('chatLog').scrollHeight;
+   });
+  }
+  $p('chatForm').onsubmit=e=>{e.preventDefault();const text=$p('chatInput').value.trim();if(!text||!chatRef)return;chatRef.push({name:myName,text,at:now()});$p('chatInput').value='';};
+
+  function renderPlayer(){
+   const s=sessionData||{},phase=s.phase||'waiting';
+   // Timer & phase
+   $p('phaseTitle').textContent=phase==='planning'?'🧠 Team planning':phase==='answering'?'🎤 Answering phase':phase==='finished'?'🏁 Game finished':'Waiting for host…';
+   let msg='The host will start the planning phase.';
+   if(phase==='planning')msg='Discuss your strategy with your team in the chat!';
+   else if(phase==='answering'){
+    if(s.activePlayer&&s.activePlayer===myKey)msg='🎤 It\'s YOUR turn to answer!';
+    else msg='Team '+s.activeTeam+' — '+escapeHtml(s.activePlayerName||'')+' is answering'+(s.activeTeam===myTeam?' (your teammate)':'');
+   } else if(phase==='finished')msg='Thanks for playing!';
+   $p('phaseMessage').innerHTML=msg;
+   const end=Number(s.endsAt||0);
+   const left=(phase==='planning'||phase==='answering')&&end?Math.max(0,Math.ceil((end-now())/1000)):null;
+   $p('phaseClock').textContent=left===null?'—':left+'s';
+   $p('pTimer').classList.toggle('urgent',left!==null&&left<=10);
+   $p('pTimer').classList.toggle('mine',phase==='answering'&&!!myKey&&s.activePlayer===myKey);
+   // Board (read-only, from host state)
+   const r=customRounds[roundIndex];if(!r)return;
+   $p('pRound').textContent=translationOn?`ラウンド ${roundIndex+1} / ${customRounds.length}`:`ROUND ${roundIndex+1} / ${customRounds.length}`;
+   $p('pQuestion').textContent=translationOn?(r.qJP||r.q):r.q;
+   $p('pAnswers').innerHTML=r.a.map((a,i)=>{const rev=revealed.has(i);const txt=translationOn?(a[3]||answerJP[a[0]]||a[0]):a[0];return `<div class="answer${rev?' revealed':''}"><span class="left"><span class="num">${i+1}</span><span class="answer-text ${rev?'visible':'hidden'}">${rev?escapeHtml(txt):'???????'}</span></span><span class="points">${rev?a[1]+(translationOn?' 点':' pts'):'—'}</span></div>`;}).join('');
+   [0,1].forEach(t=>{$p('pScore'+t).textContent=scores[t];$p('pTeam'+t).classList.toggle('active',t===activeTeam);});
+  }
+
+  // Restore a previous join after refresh
+  try{
+   const saved=localStorage.getItem('hf_player_key');
+   if(saved){myKey=saved;myName=localStorage.getItem('hf_player_name')||'';myTeam=localStorage.getItem('hf_player_team')||null;if(myTeam){$p('playerName').value=myName;enterGame();}}
+  }catch(e){}
+  sessionRef.on('value',s=>{sessionData=s.val()||{};renderPlayer();});
+  setInterval(renderPlayer,250);
+  return;
+ }
+
+ /* ---------------- HOST CONTROLS ---------------- */
+ if(viewerMode) return; // read-only viewer link
+ const top=document.querySelector('.top-actions');
+ const controls=document.createElement('div');
+ controls.className='phase-card';controls.style.margin='0 0 16px';
+ controls.innerHTML=`<b>👥 Player limits &amp; game phases</b>
+  <div class="host-settings">
+   <label>Team A max<input id="limitA" type="number" min="1" max="30" value="6"></label>
+   <label>Team B max<input id="limitB" type="number" min="1" max="30" value="6"></label>
+   <button class="btn-muted" id="saveLimits">Save limits</button>
+   <button class="btn-primary" id="startPlanning">▶ Start 1-minute planning</button>
+   <button class="btn-primary" id="startAnswering">Skip to answering</button>
+   <button class="btn-muted" id="nextPlayer">Next player ⏭</button>
+   <button class="btn-outline" id="finishPhase">End game</button>
+   <button class="btn-muted" id="copyPlayerLink">Copy player link</button>
+   <button class="btn-outline" id="clearSession">Clear players &amp; chat</button>
+  </div>
+  <div class="host-clock"><div class="big" id="hostClock">—</div><div id="hostPhaseName">Phase: waiting</div></div>
+  <div class="roster"><div id="rosterA">Team A: —</div><div id="rosterB">Team B: —</div></div>
+  <p id="hostPhaseStatus" class="small-note">Players join with the player link. Planning lasts 60 seconds, then each Team A player answers for 30 seconds each (automatically advancing), followed by every Team B player.</p>`;
+ top.parentNode.insertBefore(controls,top.nextSibling);
+
+ let cur={},lastHandledEnd=0;
+ const updateSession=obj=>sessionRef.update({...obj,updatedAt:now()});
+
+ function setTurn(team,index){
+  playersRef.once('value').then(s=>{
+   const list=Object.entries(s.val()||{}).filter(([,p])=>p.team===team).sort((a,b)=>a[1].joinedAt-b[1].joinedAt);
+   if(index>=list.length){
+    if(team==='A'){setTurn('B',0);}
+    else{updateSession({phase:'finished',endsAt:0,activeTeam:null,activePlayer:null,activePlayerName:null});$p('hostPhaseStatus').textContent='All players have answered. Game finished.';}
+    return;
+   }
+   const [key,p]=list[index];
+   activeTeam=team==='A'?0:1; render();           // keep the main board's active team in sync
+   updateSession({phase:'answering',activeTeam:team,activePlayer:key,activePlayerName:p.name,turnIndex:index,endsAt:now()+TURN_MS});
+   $p('hostPhaseStatus').textContent='Now answering: Team '+team+' — '+p.name+' (player '+(index+1)+' of '+list.length+', 30 seconds)';
+  });
+ }
+
+ $p('saveLimits').onclick=()=>updateSession({limits:{A:Math.max(1,Math.min(30,Number($p('limitA').value)||1)),B:Math.max(1,Math.min(30,Number($p('limitB').value)||1))}});
+ $p('startPlanning').onclick=()=>{
+  lastHandledEnd=0;
+  updateSession({limits:{A:Math.max(1,Math.min(30,Number($p('limitA').value)||1)),B:Math.max(1,Math.min(30,Number($p('limitB').value)||1))},phase:'planning',endsAt:now()+PLANNING_MS,activeTeam:null,activePlayer:null,activePlayerName:null,turnIndex:0});
+  $p('hostPhaseStatus').textContent='Planning started: 60 seconds. Answering begins automatically.';
+ };
+ $p('startAnswering').onclick=()=>{lastHandledEnd=0;setTurn('A',0);};
+ $p('nextPlayer').onclick=()=>{lastHandledEnd=0;setTurn(cur.activeTeam||'A',(Number(cur.turnIndex)||0)+1);};
+ $p('finishPhase').onclick=()=>updateSession({phase:'finished',endsAt:0,activeTeam:null,activePlayer:null,activePlayerName:null});
+ $p('copyPlayerLink').onclick=async()=>{const u=new URL(location.href);u.search='';u.searchParams.set('player','1');try{await navigator.clipboard.writeText(u.href);$p('hostPhaseStatus').textContent='Player link copied.';}catch(e){prompt('Copy player link:',u.href);}};
+ $p('clearSession').onclick=()=>{if(confirm('Remove all players, chat and phase state?'))sessionRef.remove().then(()=>{$p('hostPhaseStatus').textContent='Session cleared.';});};
+
+ sessionRef.on('value',s=>{cur=s.val()||{};
+  if(cur.limits){$p('limitA').value=cur.limits.A;$p('limitB').value=cur.limits.B;}
+  const names=t=>Object.values(cur.players||{}).filter(p=>p.team===t).sort((a,b)=>a.joinedAt-b.joinedAt).map(p=>escapeHtml(p.name));
+  const a=names('A'),b=names('B');
+  $p('rosterA').innerHTML='<b>Team A ('+a.length+')</b>: '+(a.join(', ')||'—');
+  $p('rosterB').innerHTML='<b>Team B ('+b.length+')</b>: '+(b.join(', ')||'—');
+ });
+
+ // Host-driven automatic clock: planning → answering → each next player → next team → finished
+ setInterval(()=>{
+  const phase=cur.phase||'waiting',end=Number(cur.endsAt||0);
+  const left=(phase==='planning'||phase==='answering')&&end?Math.max(0,Math.ceil((end-now())/1000)):null;
+  $p('hostClock').textContent=left===null?'—':left+'s';
+  $p('hostPhaseName').textContent=phase==='answering'?('Answering: Team '+cur.activeTeam+' — '+(cur.activePlayerName||'')):('Phase: '+phase);
+  if(left===null||left>0||lastHandledEnd===end)return;
+  lastHandledEnd=end;
+  if(phase==='planning')setTurn('A',0);
+  else if(phase==='answering')setTurn(cur.activeTeam||'A',(Number(cur.turnIndex)||0)+1);
+ },250);
+})();
 </script>
 </body>
 </html>
