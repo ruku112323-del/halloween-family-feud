@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Halloween Family Feud</title>
+<style>
+:root {
+  --site-primary: #6d28d9;
+  --site-on-primary: #ffffff;
+  --site-secondary: #f97316;
+  --site-on-secondary: #1f1308;
+  --site-background: #171225;
+  --site-on-background: #fff8ed;
+  --site-font-body: Arial, Helvetica, sans-serif;
+  --site-font-heading: Arial, Helvetica, sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  color-scheme: light dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--site-font-body); background: light-dark(#f7f3ff, #171225); color: light-dark(#24183a, #fff8ed); }
+#app { min-height: 100vh; width: 100%; border-radius: 0; background-color: var(--site-background); color: var(--site-on-background); padding: calc(22px * var(--site-spacing-scale)); position: relative; overflow: hidden; }
+.decor { position: absolute; inset: 0; pointer-events: none; opacity: var(--site-decoration-opacity); overflow: hidden; }
+.decor span { position: absolute; font-size: clamp(36px, 8vw, 90px); opacity: .10; }
+.decor span:nth-child(1) { top: 15px; left: 4%; }
+.decor span:nth-child(2) { top: 120px; right: 3%; }
+.decor span:nth-child(3) { bottom: 20px; left: 18%; }
+main { position: relative; max-width: 1100px; margin: auto; }
+header { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
+.brand { display:flex; align-items:center; gap:12px; }
+.logo { width:52px; height:52px; display:grid; place-items:center; border-radius:16px; background:var(--site-secondary); color:var(--site-on-secondary); font-size:28px; }
+h1 { font-family:var(--site-font-heading); font-size:calc(30px * var(--site-heading-scale)); margin:0; letter-spacing:-1px; }
+.sub { color:#c9bbdf; margin-top:4px; font-size:14px; }
+.top-actions { display:flex; gap:8px; flex-wrap:wrap; }
+button { font:inherit; cursor:pointer; border:0; border-radius:calc(12px * var(--site-radius-scale)); padding:11px 15px; font-weight:700; transition:transform .12s, opacity .12s; }
+button:active { transform:scale(.97); }
+button:disabled { opacity:.38; cursor:not-allowed; }
+.btn-primary { background:var(--site-secondary); color:var(--site-on-secondary); }
+.btn-muted { background:#332747; color:#fff; border:1px solid #59476d; }
+.btn-outline { background:transparent; border:1px solid #806c9c; color:#f5eaff; }
+.scoreboard { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:stretch; margin-bottom:18px; }
+.team { background:#251b36; border:2px solid #48365f; border-radius:18px; padding:15px; text-align:center; }
+.team.active { border-color:var(--site-secondary); box-shadow:0 0 0 2px #f9731630; }
+.team-name { color:#d9cbea; font-size:13px; text-transform:uppercase; letter-spacing:1px; }
+.score { font-size:clamp(32px, 6vw, 48px); font-weight:900; line-height:1.15; margin:5px 0 10px; }
+.team-controls { display:flex; justify-content:center; gap:8px; }
+.team-controls button { padding:7px 12px; min-width:42px; }
+.vs { align-self:center; font-weight:900; color:#a995c3; }
+.turn { background:#3a2852; color:#ffe3bc; border-radius:12px; text-align:center; padding:10px 14px; margin-bottom:16px; font-weight:700; }
+.game-grid { display:grid; grid-template-columns:minmax(0, 1.55fr) minmax(260px, .85fr); gap:16px; }
+.panel { background:#21182f; border:1px solid #49375e; border-radius:20px; padding:20px; }
+.eyebrow { color:#f6a45e; font-size:12px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; }
+.question { font-size:clamp(22px, 3.4vw, 32px); font-weight:850; line-height:1.2; margin:10px 0 18px; }
+.guess-row { display:flex; gap:8px; margin:0 0 12px; }
+.guess-row input { flex:1; min-width:0; border:1px solid #806c9c; border-radius:12px; background:#fff; color:#24183a; padding:13px 14px; font:inherit; font-size:16px; }
+.guess-feedback { min-height:24px; margin:0 0 12px; color:#ffd19b; font-size:14px; font-weight:700; }
+.strikes { display:flex; align-items:center; gap:7px; color:#ffb0b0; font-weight:800; margin:0 0 12px; }
+.timer-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 15px; border-radius:14px; background:#3a2852; margin:0 0 14px; }
+.timer-value { font-size:clamp(28px,5vw,40px); font-weight:900; font-variant-numeric:tabular-nums; color:#ffb46d; }
+.team-size { display:flex; align-items:center; justify-content:center; gap:6px; color:#d9cbea; font-size:12px; margin-top:8px; }
+.team-size input { width:48px; padding:5px; border-radius:7px; border:1px solid #806c9c; background:#fff; color:#24183a; text-align:center; font:inherit; }
+.answers { display:grid; gap:9px; }
+.answer { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:54px; padding:12px 15px; background:#302441; border:1px solid #554269; border-radius:12px; color:#fff; text-align:left; width:100%; }
+.answer .left { display:flex; align-items:center; gap:12px; }
+.answer .num { width:28px; height:28px; border-radius:8px; display:grid; place-items:center; background:#4a3760; color:#d9cbea; font-size:13px; }
+.answer .points { color:#ffb46d; font-weight:900; }
+.answer.revealed { background:#3b2850; border-color:#a875d5; }
+.answer.revealed .num { background:var(--site-secondary); color:#241306; }
+.answer.revealed .answer-text { font-weight:800; }
+.answer-text.hidden { color:#d8cde4; letter-spacing:2px; }
+.answer-text.visible { color:#fff; letter-spacing:0; }
+.hint-title { font-size:19px; margin:0 0 4px; }
+.hint-desc { color:#c8bad8; font-size:13px; line-height:1.45; margin:0 0 14px; }
+.power { width:100%; text-align:left; display:flex; align-items:center; gap:12px; margin:9px 0; background:#302441; border:1px solid #59456e; color:#fff; padding:12px; }
+.power-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:12px; background:#49315f; font-size:22px; flex:none; }
+.power strong { display:block; font-size:14px; }
+.power small { display:block; color:#c9bad9; font-size:12px; margin-top:3px; font-weight:400; }
+.power.used { opacity:.35; text-decoration:line-through; }
+.hint-box { display:none; margin-top:14px; padding:14px; border-radius:13px; background:#39274f; border:1px solid #a875d5; }
+.hint-box.show { display:block; }
+.hint-label { color:#ffb46d; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.hint-content { font-size:18px; font-weight:800; }
+.hint-sub { color:#d7c9e5; font-size:12px; margin-top:6px; }
+.footer-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+.footer-actions button { flex:1; }
+.round-nav { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.round-label { font-weight:800; color:#d7c9e5; }
+.small-note { color:#b9a9cb; font-size:12px; margin-top:13px; line-height:1.5; }
+.jp { display:none; }
+.show-jp .jp { display:inline; }
+.modal-backdrop { display:none; position:fixed; inset:0; background:#080510c9; z-index:5; padding:18px; align-items:center; justify-content:center; }
+.modal-backdrop.open { display:flex; }
+.modal { max-width:520px; width:100%; background:#251b36; border:1px solid #755a91; border-radius:20px; padding:22px; box-shadow:0 20px 80px #0008; }
+.modal h2 { margin:0 0 10px; }
+.modal p { color:#d1c3df; line-height:1.5; }
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+body.viewer #guessForm, body.viewer #guessFeedback, body.viewer #strikes, body.viewer .timer-bar, body.viewer .footer-actions, body.viewer .team-size, body.viewer aside, body.viewer #rulesBtn, body.viewer #resetBtn { display:none !important; }
+@media(max-width:760px) { #app { padding:15px; } .game-grid { grid-template-columns:1fr; } .scoreboard { gap:7px; } .team { padding:11px 6px; } .team-controls button { padding:7px 9px; } .panel { padding:15px; } h1 { font-size:25px; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="decor" aria-hidden="true"><span>🎃</span><span>👻</span><span>🦇</span></div>
+  <main>
+    <header>
+      <div class="brand"><div class="logo">🎃</div><div><h1>Halloween Family Feud / ハロウィン・ファミリーフュード</h1><div class="sub">Guess the top answers / 人気の答えを当てよう！</div></div></div>
+      <div class="top-actions"><button class="btn-muted" id="languageBtn" aria-pressed="false">日本語表示 / Show Japanese: OFF</button><button class="btn-muted" id="rulesBtn">How to play / 遊び方</button><button class="btn-outline" id="resetBtn">↻ Reset / リセット</button></div>
+    </header>
+    <section class="scoreboard">
+      <div class="team active" id="team0"><div class="team-name" id="name0">Team A <span class="jp">/ Aチーム</span></div><div class="score" id="score0">0</div><div class="team-size">Players <span class="jp">/ 人数</span> <input id="players0" type="number" min="1" max="20" value="4" aria-label="Team A players"></div></div>
+      <div class="vs">VS</div>
+      <div class="team" id="team1"><div class="team-name" id="name1">Team B <span class="jp">/ Bチーム</span></div><div class="score" id="score1">0</div><div class="team-size">Players <span class="jp">/ 人数</span> <input id="players1" type="number" min="1" max="20" value="4" aria-label="Team B players"></div></div>
+    </section>
+    <div class="turn" id="turnBanner">🎤 Team A's turn <span class="jp">/ Aチームの番です</span></div>
+    <section class="game-grid">
+      <div class="panel">
+        <div class="round-nav"><div class="eyebrow" id="roundCount">ROUND 1 / 10</div><div class="round-label" id="roundPoints">0 / 100 points found</div></div>
+        <div class="timer-bar"><div><div class="eyebrow">TIME LIMIT <span class="jp">/ 制限時間</span></div><div class="small-note" id="timerRule">30 seconds × 4 players <span class="jp">/ 30秒 × 4人</span></div></div><div class="timer-value" id="timerValue">120</div><button class="btn-muted" id="timerStart">Start <span class="jp">/ 開始</span></button></div>
+        <div class="question" id="question">Name something people see at Halloween. <span class="jp">/ ハロウィンで見かけるものは？</span></div>
+        <form class="guess-row" id="guessForm"><input id="guessInput" autocomplete="off" placeholder="Type answer…" aria-label="Type your answer"><button class="btn-primary" type="submit">Submit <span class="jp">/ 回答</span></button></form>
+        <div class="guess-feedback" id="guessFeedback" aria-live="polite">Enter your answer in English or Japanese. <span class="jp">/ 英語または日本語で入力してください。</span></div>
+        <div class="strikes" id="strikes">❌ Strikes <span class="jp">/ ミス</span>: 0 / 3</div>
+        <div class="answers" id="answers"></div>
+        <div class="footer-actions"><button class="btn-muted" id="switchBtn">Switch team <span class="jp">/ 交代</span></button><button class="btn-primary" id="nextBtn">Next question <span class="jp">/ 次の問題</span> →</button></div>
+        <div class="small-note">The website is the host. / ウェブサイトが司会をします。 English and Japanese answers are accepted. / 英語・日本語どちらも回答できます。</div>
+      </div>
+      <aside class="panel">
+        <h2 class="hint-title">✨ Hint Powers <span class="jp">/ ヒントパワー</span></h2>
+        <p class="hint-desc">Each team can use each power once. <span class="jp">/ 各チーム各パワー1回ずつ使えます。</span></p>
+        <button class="power" id="wordPower"><span class="power-icon">💬</span><span><strong>One-Word Hint <span class="jp">/ ひとことヒント</span></strong><small>Get one keyword. <span class="jp">/ キーワードを1つ表示。</span></small></span></button>
+        <button class="power" id="picturePower"><span class="power-icon">🖼️</span><span><strong>Picture Hint <span class="jp">/ 絵文字ヒント</span></strong><small>See a picture clue. <span class="jp">/ 絵文字でヒント。</span></small></span></button>
+        <button class="power" id="choicePower"><span class="power-icon">🔎</span><span><strong>Multiple Choice <span class="jp">/ 3択ヒント</span></strong><small>Choose from three answers. <span class="jp">/ 3つから選ぶ。</span></small></span></button>
+        <div class="hint-box" id="hintBox"><div class="hint-label" id="hintLabel">HINT</div><div class="hint-content" id="hintContent"></div><div class="hint-sub" id="hintSub"></div></div>
+        <div class="small-note" id="powerStatus">Team A: 3 powers available · Team B: 3 powers available</div>
+      </aside>
+    </section>
+  </main>
+</div>
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal"><h2 id="modalTitle">How to play</h2><div id="modalBody"></div><div class="modal-actions"><button class="btn-primary" id="modalClose">Got it!</button></div></div></div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDsjcclI3-L9aYNpga294NiefsftjDCvo4",
+  authDomain: "halloween-feud-2026-14d76.firebaseapp.com",
+  databaseURL: "https://halloween-feud-2026-14d76-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "halloween-feud-2026-14d76",
+  storageBucket: "halloween-feud-2026-14d76.firebasestorage.app",
+  messagingSenderId: "1086705895821",
+  appId: "1:1086705895821:web:915df157cba9e16c7355c4"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const roomRef = database.ref('rooms/halloween-feud-2026/state');
+const viewerMode = new URLSearchParams(location.search).get('view') === '1';
+if (viewerMode) document.body.classList.add('viewer');
+
+const rounds = [
+ {q:"Name something people see at Halloween.",a:[['Pumpkin',30,'Carving'],['Ghost',25,'White sheet'],['Witch',20,'Broom'],['Costume',15,'Dress up'],['Spider',10,'Web']]},
+ {q:"Name something people are afraid of.",a:[['Ghost',30,'Boo!'],['Snake',25,'Slither'],['Spider',20,'Web'],['Darkness',15,'Lights off'],['Zombie',10,'Undead']]},
+ {q:"Name a popular Halloween costume.",a:[['Witch',30,'Broom'],['Vampire',25,'Fangs'],['Ghost',20,'White sheet'],['Zombie',15,'Brains'],['Cat',10,'Meow']]},
+ {q:"Name something you might find in a haunted house.",a:[['Ghost',30,'Boo!'],['Spider web',25,'Sticky web'],['Skeleton',20,'Bones'],['Coffin',15,'Sleep forever'],['Old furniture',10,'Dusty chair']]},
+ {q:"Name a sweet treat people enjoy.",a:[['Chocolate',30,'Brown and sweet'],['Candy',25,'Lollipop'],['Cake',20,'Birthday'],['Cookies',15,'Crunchy snack'],['Donut',10,'Ring-shaped']]},
+ {q:"Name an animal connected with Halloween.",a:[['Black cat',30,'Meow'],['Bat',25,'Flies at night'],['Spider',20,'Eight legs'],['Owl',15,'Hoot'],['Rat',10,'Long tail']]},
+ {q:"Name something you use to decorate for Halloween.",a:[['Pumpkin',30,'Carving'],['Cobweb',25,'Spider'],['Candles',20,'Flame'],['Skull',15,'Bones'],['Balloons',10,'Party']]},
+ {q:"Name a place where you might see a ghost in a movie.",a:[['Haunted house',30,'Old and scary'],['Cemetery',25,'Gravestones'],['Castle',20,'King and queen'],['Hospital',15,'Doctor'],['School',10,'Classroom']]},
+ {q:"Name something you say when you want candy.",a:[['Trick or treat',35,'Two words, starts with T'],['Please',25,'Polite word'],['Thank you',20,'After receiving'],['Happy Halloween',10,'Seasonal greeting'],['More candy',10,'Two sweet words']]},
+ {q:"Name something you might see in a witch's room.",a:[['Broom',30,'Flying ride'],['Cauldron',25,'Big cooking pot'],['Potion',20,'Magic drink'],['Black cat',15,'Meow'],['Spell book',10,'Magic words']]}
+];
+let roundIndex=0, scores=[0,0], activeTeam=0, revealed=new Set(), used=[new Set(),new Set()], strikes=0, guessed=new Set(), translationOn=false;
+const questionJP=['ハロウィンで見かけるものは？','人が怖がるものは？','人気のハロウィン仮装は？','お化け屋敷にありそうなものは？','みんなが好きなお菓子は？','ハロウィンに関係する動物は？','ハロウィンの飾りに使うものは？','映画で幽霊が出そうな場所は？','お菓子をもらうときに言う言葉は？','魔女の部屋にありそうなものは？'];
+const answerJP={'Pumpkin':'かぼちゃ','Ghost':'おばけ','Witch':'魔女','Costume':'仮装','Spider':'クモ','Snake':'ヘビ','Darkness':'暗闇','Zombie':'ゾンビ','Vampire':'吸血鬼','Cat':'猫','Spider web':'クモの巣','Skeleton':'ガイコツ','Coffin':'棺桶','Old furniture':'古い家具','Chocolate':'チョコレート','Candy':'キャンディー','Cake':'ケーキ','Cookies':'クッキー','Donut':'ドーナツ','Black cat':'黒猫','Bat':'コウモリ','Owl':'フクロウ','Rat':'ネズミ','Cobweb':'クモの巣','Candles':'ろうそく','Skull':'ドクロ','Balloons':'風船','Haunted house':'お化け屋敷','Cemetery':'墓地','Castle':'城','Hospital':'病院','School':'学校','Trick or treat':'トリック・オア・トリート','Please':'お願いします','Thank you':'ありがとう','Happy Halloween':'ハッピーハロウィン','More candy':'もっとお菓子','Broom':'ほうき','Cauldron':'大釜','Potion':'魔法の薬','Spell book':'魔法の本'};
+const $=id=>document.getElementById(id);
+function render(){
+ const r=rounds[roundIndex]; $('roundCount').textContent=translationOn?`ラウンド ${roundIndex+1} / ${rounds.length}`:`ROUND ${roundIndex+1} / ${rounds.length}`; $('question').textContent=translationOn?questionJP[roundIndex]:r.q;
+ $('roundPoints').textContent=translationOn?`${r.a.reduce((s,a,i)=>s+(revealed.has(i)?a[1]:0),0)} / 100 点`:`${r.a.reduce((s,a,i)=>s+(revealed.has(i)?a[1]:0),0)} / 100 points found`;
+ $('strikes').textContent=translationOn?`❌ ミス: ${strikes} / 3`:`❌ Strikes: ${strikes} / 3`;
+ $('answers').innerHTML='';
+ r.a.forEach((a,i)=>{const b=document.createElement('div');b.className='answer'+(revealed.has(i)?' revealed':'');const answer=translationOn?(answerJP[a[0]]||a[0]):a[0];b.innerHTML=`<span class="left"><span class="num">${i+1}</span><span class="answer-text ${revealed.has(i)?'visible':'hidden'}">${revealed.has(i)?answer:'???????'}</span></span><span class="points">${revealed.has(i)?a[1]+(translationOn?' 点':' pts'):'—'}</span>`;$('answers').appendChild(b);});
+ [0,1].forEach(t=>{$('score'+t).textContent=scores[t];$('team'+t).classList.toggle('active',t===activeTeam);});
+ $('turnBanner').textContent=translationOn?`🎤 ${activeTeam===0?'Aチーム':'Bチーム'}の番です。答えを入力してください！`:`🎤 ${$('name'+activeTeam).textContent}'s turn — choose an answer or use a hint!`;
+ ['word','picture','choice'].forEach(p=>{const id=p+'Power';$(id).disabled=used[activeTeam].has(p);$(id).classList.toggle('used',used[activeTeam].has(p));});
+ $('powerStatus').textContent=translationOn?`Aチーム：ヒント残り ${3-used[0].size}回 · Bチーム：ヒント残り ${3-used[1].size}回`:`${$('name0').textContent}: ${3-used[0].size} powers available · ${$('name1').textContent}: ${3-used[1].size} powers available`;
+ $('hintBox').classList.remove('show');
+ $('nextBtn').textContent=translationOn?(roundIndex===rounds.length-1?'ゲーム終了 ✓':'次の問題 →'):(roundIndex===rounds.length-1?'Finish game ✓':'Next question →');
+ if(!viewerMode) publishState();
+}
+function publishState(){
+ const state={roundIndex,scores,activeTeam,revealed:[...revealed],strikes,translationOn,updatedAt:Date.now()};
+ roomRef.set(state).catch(error=>console.error('Could not publish game state:',error));
+}
+if(viewerMode){
+ roomRef.on('value',snapshot=>{
+  const state=snapshot.val();
+  if(!state)return;
+  roundIndex=state.roundIndex??0;scores=state.scores??[0,0];activeTeam=state.activeTeam??0;
+  revealed=new Set(state.revealed??[]);strikes=state.strikes??0;translationOn=!!state.translationOn;
+  document.getElementById('app').classList.toggle('show-jp',translationOn);
+  $('languageBtn').textContent=translationOn?'日本語表示 / Show Japanese: ON':'日本語表示 / Show Japanese: OFF';
+  $('languageBtn').setAttribute('aria-pressed',String(translationOn));
+  render();
+ });
+}else{
+ $('languageBtn').insertAdjacentHTML('afterend','<button class="btn-muted" id="viewerLinkBtn">Copy viewer link / 観覧リンクをコピー</button>');
+ $('viewerLinkBtn').onclick=async()=>{
+  const url=new URL(location.href);url.searchParams.set('view','1');
+  try{await navigator.clipboard.writeText(url.href);$('viewerLinkBtn').textContent='Link copied! / コピーしました！';}
+  catch(e){prompt('Copy this viewer link:',url.href);}
+ };
+}
+function reveal(i){if(revealed.has(i))return;revealed.add(i);scores[activeTeam]+=rounds[roundIndex].a[i][1];render();}
+function normalizeAnswer(value){return value.toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\p{L}\p{N}]/gu,'');}
+function submitGuess(value){const guess=normalizeAnswer(value);if(!guess)return;const r=rounds[roundIndex];const match=r.a.findIndex((a,i)=>!revealed.has(i)&&(normalizeAnswer(a[0])===guess||normalizeAnswer(a[0]).includes(guess)&&guess.length>=4));if(match>=0){revealed.add(match);scores[activeTeam]+=r.a[match][1];$('guessFeedback').textContent=`✅ Correct! ${r.a[match][0]} — ${r.a[match][1]} points for ${$('name'+activeTeam).textContent}.`;render();$('guessFeedback').textContent=`✅ Correct! ${r.a[match][0]} — ${r.a[match][1]} points for ${$('name'+activeTeam).textContent}.`;return;}if(guessed.has(guess)){$('guessFeedback').textContent='That answer has already been tried. Try another one!';return;}guessed.add(guess);strikes++;if(strikes>=3){$('guessFeedback').textContent='❌ Three strikes! Switch to the other team.';render();$('guessFeedback').textContent='❌ Three strikes! Switch to the other team.';activeTeam=1-activeTeam;strikes=0;render();$('guessFeedback').textContent='Other team’s turn! Enter your guess.';}else{$('guessFeedback').textContent=`❌ Not on the board. ${3-strikes} ${3-strikes===1?'strike':'strikes'} left.`;render();$('guessFeedback').textContent=`❌ Not on the board. ${3-strikes} ${3-strikes===1?'strike':'strikes'} left.`;}}
+function adjustScore(t,n){scores[t]=Math.max(0,scores[t]+n);render();}
+function switchTeam(){activeTeam=1-activeTeam;render();}
+function usePower(kind){if(used[activeTeam].has(kind))return;const r=rounds[roundIndex];const hidden=r.a.map((a,i)=>({a,i})).filter(x=>!revealed.has(x.i));if(!hidden.length){showHint('No hidden answers remain.','Try the next question.','POWER');return;}const pick=hidden[0];used[activeTeam].add(kind);let title='',content='',sub='';
+ if(kind==='word'){title='ONE-WORD HINT';content=pick.a[2];sub='One keyword to help your team guess.';}
+ if(kind==='picture'){title='PICTURE HINT';const pics={'Pumpkin':'🎃','Ghost':'👻','Witch':'🧙','Costume':'🧛','Spider':'🕷️','Snake':'🐍','Darkness':'🌑','Zombie':'🧟','Vampire':'🧛','Cat':'🐈‍⬛','Spider web':'🕸️','Skeleton':'💀','Coffin':'⚰️','Old furniture':'🪑','Chocolate':'🍫','Candy':'🍬','Cake':'🍰','Cookies':'🍪','Donut':'🍩','Black cat':'🐈‍⬛','Bat':'🦇','Owl':'🦉','Rat':'🐀','Cobweb':'🕸️','Candles':'🕯️','Skull':'💀','Balloons':'🎈','Haunted house':'🏚️','Cemetery':'⚰️','Castle':'🏰','Hospital':'🏥','School':'🏫','Trick or treat':'🍭','Please':'🙏','Thank you':'😊','Happy Halloween':'🎃','More candy':'🍬','Broom':'🧹','Cauldron':'⚗️','Potion':'🧪','Spell book':'📖'};content=(pics[pick.a[0]]||'🔍')+'  '+pick.a[2];sub='Look at the emoji and clue. What answer could it represent?';}
+ if(kind==='choice'){title='MULTIPLE-CHOICE HINT';const distractors=['Pumpkin','Ghost','Witch','Spider','Candy','Bat','Zombie','Vampire','Skeleton','Black cat'].filter(x=>x!==pick.a[0]);const opts=[pick.a[0],distractors[(roundIndex+1)%distractors.length],distractors[(roundIndex+4)%distractors.length]].sort(()=>Math.random()-.5);content=opts.map((x,i)=>`${String.fromCharCode(65+i)}. ${x}`).join('　');sub='Only one of these answers is on the board.';}
+ showHint(title,content,sub);
+}
+function showHint(t,c,s){$('hintLabel').textContent=t;$('hintContent').textContent=c;$('hintSub').textContent=s;$('hintBox').classList.add('show');}
+function nextRound(){if(roundIndex===rounds.length-1){const winner=scores[0]===scores[1]?'It is a tie!':$('name'+(scores[0]>scores[1]?0:1)).textContent+' wins!';openModal('🏆 Game over!',`<p style="font-size:22px;font-weight:800;color:#ffb46d">${winner}</p><p>Final score: ${$('name0').textContent} ${scores[0]} — ${$('name1').textContent} ${scores[1]}</p><p>Press Reset game to play again.</p>`);return;}roundIndex++;revealed=new Set();strikes=0;guessed=new Set();activeTeam=1-activeTeam;render();$('guessFeedback').textContent='New question! Type your answer.';$('guessInput').value='';}
+function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modalBackdrop').classList.add('open');}
+$('modalClose').onclick=()=>$('modalBackdrop').classList.remove('open');
+$('languageBtn').onclick=()=>{translationOn=!translationOn;document.getElementById('app').classList.toggle('show-jp',translationOn);$('languageBtn').textContent=translationOn?'日本語表示 / Show Japanese: ON':'日本語表示 / Show Japanese: OFF';$('languageBtn').setAttribute('aria-pressed',String(translationOn));render();};
+$('guessForm').addEventListener('submit',event=>{event.preventDefault();submitGuess($('guessInput').value);$('guessInput').value='';$('guessInput').focus();});
+$('switchBtn').onclick=switchTeam;$('nextBtn').onclick=nextRound;
+$('wordPower').onclick=()=>usePower('word');$('picturePower').onclick=()=>usePower('picture');$('choicePower').onclick=()=>usePower('choice');
+$('rulesBtn').onclick=()=>openModal('How to play',`<p><b>1.</b> Split into two teams. The highlighted team answers first.</p><p><b>2.</b> Read the question aloud. Click an answer tile to reveal it and add its points.</p><p><b>3.</b> If your team gets stuck, use one of the three hint powers. Each team can use each power only once for the entire game.</p><p><b>4.</b> Click “Switch team turn” to pass the turn. Click “Next question” when the round is finished.</p><p><b>5.</b> Highest score after 10 questions wins. Japanese answers are okay!</p><p><b>Host note:</b> These are sample survey-style points for party play, not results from a real survey.</p>`);
+$('resetBtn').onclick=()=>{roundIndex=0;scores=[0,0];activeTeam=0;revealed=new Set();used=[new Set(),new Set()];strikes=0;guessed=new Set();render();$('hintBox').classList.remove('show');$('guessInput').value='';$('guessFeedback').textContent='Type an answer and let the game check it!';};
+render();
+</script>
+</body>
+</html>
