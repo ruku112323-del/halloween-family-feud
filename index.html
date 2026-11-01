@@ -50,7 +50,7 @@ button:disabled { opacity:.38; cursor:not-allowed; }
 .team-controls button { padding:7px 12px; min-width:42px; }
 .vs { align-self:center; font-weight:900; color:#a995c3; }
 .turn { background:#3a2852; color:#ffe3bc; border-radius:12px; text-align:center; padding:10px 14px; margin-bottom:16px; font-weight:700; }
-.game-grid { display:grid; grid-template-columns:minmax(0, 1.55fr) minmax(260px, .85fr); gap:16px; }
+.game-grid { display:grid; grid-template-columns:minmax(0, 1fr); gap:16px; }
 .panel { background:#21182f; border:1px solid #49375e; border-radius:20px; padding:20px; }
 .eyebrow { color:#f6a45e; font-size:12px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; }
 .question { font-size:clamp(22px, 3.4vw, 32px); font-weight:850; line-height:1.2; margin:10px 0 18px; }
@@ -94,7 +94,7 @@ button:disabled { opacity:.38; cursor:not-allowed; }
 .modal p { color:#d1c3df; line-height:1.5; }
 .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
 body.viewer #guessForm, body.viewer #guessFeedback, body.viewer #strikes, body.viewer .footer-actions, body.viewer aside, body.viewer #rulesBtn, body.viewer #resetBtn, body.viewer #editQuestionsBtn { display:none !important; }
-body.viewer #languageBtn { display:none !important; }
+body.viewer #languageBtn, body.viewer #hostPanel { display:none !important; }
 @media(max-width:760px) { #app { padding:15px; } .game-grid { grid-template-columns:1fr; } .scoreboard { gap:7px; } .team { padding:11px 6px; } .team-controls button { padding:7px 9px; } .panel { padding:15px; } h1 { font-size:25px; } }
 
 /* ---------- Host phase panel & Player screen ---------- */
@@ -145,23 +145,33 @@ body.player-mode #playerApp { display:block; }
       <div class="panel">
         <div class="round-nav"><div class="eyebrow" id="roundCount">ROUND 1 / 10</div><div class="round-label" id="roundPoints">0 / 100 points found</div></div>
         <div class="question" id="question">Name something people see at Halloween. <span class="jp">/ ハロウィンで見かけるものは？</span></div>
-        <form class="guess-row" id="guessForm"><input id="guessInput" autocomplete="off" placeholder="Type answer…" aria-label="Type your answer"><button class="btn-primary" type="submit">Submit <span class="jp">/ 回答</span></button></form>
-        <div class="guess-feedback" id="guessFeedback" aria-live="polite">Enter your answer in English or Japanese. <span class="jp">/ 英語または日本語で入力してください。</span></div>
+                <div class="guess-feedback" id="guessFeedback" aria-live="polite">Players answer on their own screens. <span class="jp">/ 回答はプレイヤーの画面で行います。</span></div>
         <div class="strikes" id="strikes">❌ Strikes <span class="jp">/ ミス</span>: 0 / 3</div>
         <div class="answers" id="answers"></div>
-        <div class="footer-actions"><button class="btn-muted" id="nextPlayerBtn">Next player ⏭ <span class="jp">/ 次の人</span></button><button class="btn-primary" id="nextBtn">Next question <span class="jp">/ 次の問題</span> →</button></div>
+        <div class="phase-card" id="hostPanel" style="margin:16px 0 0;padding:14px">
+          <b>👥 Players &amp; timer</b>
+          <div class="host-clock"><div class="big" id="hostClock">—</div><div id="hostPhaseName">Phase: waiting</div></div>
+          <div class="footer-actions">
+            <button class="btn-primary" id="startPlanning">▶ Start 1-minute planning</button>
+            <button class="btn-muted" id="nextPlayerBtn">Next player ⏭</button>
+            <button class="btn-primary" id="nextBtn">Next question →</button>
+            <button class="btn-outline" id="finishPhase">End game</button>
+          </div>
+          <div class="roster"><div id="rosterA">Team A: —</div><div id="rosterB">Team B: —</div></div>
+          <details style="margin-top:10px"><summary style="cursor:pointer;color:#d9cbea">Setup (player limits, link, clear)</summary>
+            <div class="host-settings">
+              <label>Team A max<input id="limitA" type="number" min="1" max="30" value="6"></label>
+              <label>Team B max<input id="limitB" type="number" min="1" max="30" value="6"></label>
+              <button class="btn-muted" id="saveLimits">Save limits</button>
+              <button class="btn-muted" id="copyPlayerLink">Copy player link</button>
+              <button class="btn-outline" id="clearSession">Clear players &amp; chat</button>
+            </div>
+          </details>
+          <p id="hostPhaseStatus" class="small-note">Players join with the player link. Planning lasts 60 seconds, then each player answers once during their own 30 seconds, Team A first, then Team B.</p>
+        </div>
         <div class="small-note">The website is the host. / ウェブサイトが司会をします。 English and Japanese answers are accepted. / 英語・日本語どちらも回答できます。</div>
       </div>
-      <aside class="panel">
-        <h2 class="hint-title">✨ Hint Powers <span class="jp">/ ヒントパワー</span></h2>
-        <p class="hint-desc">Each team can use each power once. <span class="jp">/ 各チーム各パワー1回ずつ使えます。</span></p>
-        <button class="power" id="wordPower"><span class="power-icon">💬</span><span><strong>One-Word Hint <span class="jp">/ ひとことヒント</span></strong><small>Get one keyword. <span class="jp">/ キーワードを1つ表示。</span></small></span></button>
-        <button class="power" id="picturePower"><span class="power-icon">🖼️</span><span><strong>Picture Hint <span class="jp">/ 絵文字ヒント</span></strong><small>See a picture clue. <span class="jp">/ 絵文字でヒント。</span></small></span></button>
-        <button class="power" id="choicePower"><span class="power-icon">🔎</span><span><strong>Multiple Choice <span class="jp">/ 3択ヒント</span></strong><small>Choose from three answers. <span class="jp">/ 3つから選ぶ。</span></small></span></button>
-        <div class="hint-box" id="hintBox"><div class="hint-label" id="hintLabel">HINT</div><div class="hint-content" id="hintContent"></div><div class="hint-sub" id="hintSub"></div></div>
-        <div class="small-note" id="powerStatus">Team A: 3 powers available · Team B: 3 powers available</div>
-      </aside>
-    </section>
+          </section>
   </main>
 </div>
 <div class="modal-backdrop" id="editorBackdrop"><div class="modal" style="max-height:90vh;overflow:auto"><h2>✏️ Edit Questions</h2><p>Changes are saved for all connected phones.</p><label for="editRound">Choose round</label><select id="editRound" style="display:block;width:100%;padding:11px;margin:7px 0 14px;border-radius:9px"><option value="0">Round 1</option></select><label for="editQuestion">Question (English)</label><input id="editQuestion" style="display:block;width:100%;padding:11px;margin:7px 0 12px;border-radius:9px"><label for="editQuestionJP">Question (Japanese, optional)</label><input id="editQuestionJP" style="display:block;width:100%;padding:11px;margin:7px 0 14px;border-radius:9px"><div id="answerEditor"></div><div class="modal-actions"><button class="btn-muted" id="cancelEditor">Cancel</button><button class="btn-primary" id="saveQuestion">Save Round</button></div></div></div>
@@ -189,10 +199,26 @@ body.player-mode #playerApp { display:block; }
       <div class="score" id="phaseClock">—</div>
       <div id="phaseMessage">The host will start the planning phase.</div>
     </div>
+    <div class="turn player-hidden" id="pResult"></div>
+    <div class="phase-card player-hidden" id="answerBox">
+      <h3 style="margin:0 0 6px">🎤 Your turn — give your answer!</h3>
+      <form id="answerForm" style="display:flex;gap:8px"><input id="answerInput" autocomplete="off" placeholder="Type your answer…" style="margin:0;flex:1;min-width:0"><button class="btn-primary" type="submit" id="answerBtn">Answer</button></form>
+      <div class="small-note" id="answerNote">You can answer only once.</div>
+    </div>
     <div class="panel">
       <div class="eyebrow" id="pRound"></div>
       <div class="question" id="pQuestion"></div>
       <div class="answers" id="pAnswers"></div>
+    </div>
+    <div class="phase-card">
+      <h3 style="margin:0 0 6px">✨ Team powers</h3>
+      <div class="small-note" style="margin-top:0">Each team can use each power once per game. Hints are shared with your team.</div>
+      <div style="display:grid;gap:8px;margin-top:10px">
+        <button class="btn-muted" id="pwWord">💬 One-Word Hint</button>
+        <button class="btn-muted" id="pwPicture">🖼️ Picture Hint</button>
+        <button class="btn-muted" id="pwChoice">🔎 Multiple Choice</button>
+      </div>
+      <div id="pHints"></div>
     </div>
     <div class="phase-card">
       <h3 style="margin:0">💬 Team chat</h3>
@@ -253,9 +279,7 @@ function render(){
  r.a.forEach((a,i)=>{const b=document.createElement('div');b.className='answer'+(revealed.has(i)?' revealed':'');const answer=translationOn?(a[3]||answerJP[a[0]]||a[0]):a[0];b.innerHTML=`<span class="left"><span class="num">${i+1}</span><span class="answer-text ${revealed.has(i)?'visible':'hidden'}">${revealed.has(i)?answer:'???????'}</span></span><span class="points">${revealed.has(i)?a[1]+(translationOn?' 点':' pts'):'—'}</span>`;$('answers').appendChild(b);});
  [0,1].forEach(t=>{$('score'+t).textContent=scores[t];$('team'+t).classList.toggle('active',t===activeTeam);});
  $('turnBanner').textContent=translationOn?`🎤 ${activeTeam===0?'Aチーム':'Bチーム'}の番です。答えを入力してください！`:`🎤 ${$('name'+activeTeam).textContent}'s turn — choose an answer or use a hint!`;
- ['word','picture','choice'].forEach(p=>{const id=p+'Power';$(id).disabled=used[activeTeam].has(p);$(id).classList.toggle('used',used[activeTeam].has(p));});
- $('powerStatus').textContent=translationOn?`Aチーム：ヒント残り ${3-used[0].size}回 · Bチーム：ヒント残り ${3-used[1].size}回`:`${$('name0').textContent}: ${3-used[0].size} powers available · ${$('name1').textContent}: ${3-used[1].size} powers available`;
- $('hintBox').classList.remove('show');
+ 
  $('nextBtn').textContent=translationOn?(roundIndex===rounds.length-1?'ゲーム終了 ✓':'次の問題 →'):(roundIndex===rounds.length-1?'Finish game ✓':'Next question →');
  if(!viewerMode) publishState();
 }
@@ -289,14 +313,7 @@ function normalizeAnswer(value){return value.toLocaleLowerCase().normalize('NFD'
 function submitGuess(value){const guess=normalizeAnswer(value);if(!guess)return;const r=customRounds[roundIndex];const match=r.a.findIndex((a,i)=>!revealed.has(i)&&(normalizeAnswer(a[0])===guess||normalizeAnswer(a[0]).includes(guess)&&guess.length>=4||normalizeAnswer(a[3]||'')===guess));if(match>=0){revealed.add(match);scores[activeTeam]+=r.a[match][1];$('guessFeedback').textContent=`✅ Correct! ${r.a[match][0]} — ${r.a[match][1]} points for ${$('name'+activeTeam).textContent}.`;render();$('guessFeedback').textContent=`✅ Correct! ${r.a[match][0]} — ${r.a[match][1]} points for ${$('name'+activeTeam).textContent}.`;return;}if(guessed.has(guess)){$('guessFeedback').textContent='That answer has already been tried. Try another one!';return;}guessed.add(guess);strikes++;if(strikes>=3){$('guessFeedback').textContent='❌ Three strikes! Switch to the other team.';render();$('guessFeedback').textContent='❌ Three strikes! Switch to the other team.';activeTeam=1-activeTeam;strikes=0;render();$('guessFeedback').textContent='Other team’s turn! Enter your guess.';}else{$('guessFeedback').textContent=`❌ Not on the board. ${3-strikes} ${3-strikes===1?'strike':'strikes'} left.`;render();$('guessFeedback').textContent=`❌ Not on the board. ${3-strikes} ${3-strikes===1?'strike':'strikes'} left.`;}}
 function adjustScore(t,n){scores[t]=Math.max(0,scores[t]+n);render();}
 function switchTeam(){activeTeam=1-activeTeam;render();}
-function usePower(kind){if(used[activeTeam].has(kind))return;const r=customRounds[roundIndex];const hidden=r.a.map((a,i)=>({a,i})).filter(x=>!revealed.has(x.i));if(!hidden.length){showHint('No hidden answers remain.','Try the next question.','POWER');return;}const pick=hidden[0];used[activeTeam].add(kind);let title='',content='',sub='';
- if(kind==='word'){title='ONE-WORD HINT';content=pick.a[2];sub='One keyword to help your team guess.';}
- if(kind==='picture'){title='PICTURE HINT';const pics={'Pumpkin':'🎃','Ghost':'👻','Witch':'🧙','Costume':'🧛','Spider':'🕷️','Snake':'🐍','Darkness':'🌑','Zombie':'🧟','Vampire':'🧛','Cat':'🐈‍⬛','Spider web':'🕸️','Skeleton':'💀','Coffin':'⚰️','Old furniture':'🪑','Chocolate':'🍫','Candy':'🍬','Cake':'🍰','Cookies':'🍪','Donut':'🍩','Black cat':'🐈‍⬛','Bat':'🦇','Owl':'🦉','Rat':'🐀','Cobweb':'🕸️','Candles':'🕯️','Skull':'💀','Balloons':'🎈','Haunted house':'🏚️','Cemetery':'⚰️','Castle':'🏰','Hospital':'🏥','School':'🏫','Trick or treat':'🍭','Please':'🙏','Thank you':'😊','Happy Halloween':'🎃','More candy':'🍬','Broom':'🧹','Cauldron':'⚗️','Potion':'🧪','Spell book':'📖'};content=(pics[pick.a[0]]||'🔍')+'  '+pick.a[2];sub='Look at the emoji and clue. What answer could it represent?';}
- if(kind==='choice'){title='MULTIPLE-CHOICE HINT';const distractors=['Pumpkin','Ghost','Witch','Spider','Candy','Bat','Zombie','Vampire','Skeleton','Black cat'].filter(x=>x!==pick.a[0]);const opts=[pick.a[0],distractors[(roundIndex+1)%distractors.length],distractors[(roundIndex+4)%distractors.length]].sort(()=>Math.random()-.5);content=opts.map((x,i)=>`${String.fromCharCode(65+i)}. ${x}`).join('　');sub='Only one of these answers is on the board.';}
- showHint(title,content,sub);
-}
-function showHint(t,c,s){$('hintLabel').textContent=t;$('hintContent').textContent=c;$('hintSub').textContent=s;$('hintBox').classList.add('show');}
-function nextRound(){if(roundIndex===rounds.length-1){const winner=scores[0]===scores[1]?'It is a tie!':$('name'+(scores[0]>scores[1]?0:1)).textContent+' wins!';openModal('🏆 Game over!',`<p style="font-size:22px;font-weight:800;color:#ffb46d">${winner}</p><p>Final score: ${$('name0').textContent} ${scores[0]} — ${$('name1').textContent} ${scores[1]}</p><p>Press Reset game to play again.</p>`);return;}roundIndex++;revealed=new Set();strikes=0;guessed=new Set();activeTeam=1-activeTeam;render();$('guessFeedback').textContent='New question! Type your answer.';$('guessInput').value='';}
+function nextRound(){if(roundIndex===rounds.length-1){const winner=scores[0]===scores[1]?'It is a tie!':$('name'+(scores[0]>scores[1]?0:1)).textContent+' wins!';openModal('🏆 Game over!',`<p style="font-size:22px;font-weight:800;color:#ffb46d">${winner}</p><p>Final score: ${$('name0').textContent} ${scores[0]} — ${$('name1').textContent} ${scores[1]}</p><p>Press Reset game to play again.</p>`);return;}roundIndex++;revealed=new Set();strikes=0;guessed=new Set();activeTeam=1-activeTeam;render();$('guessFeedback').textContent='New question!';}
 function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modalBackdrop').classList.add('open');}
 $('modalClose').onclick=()=>$('modalBackdrop').classList.remove('open');
 function escapeEditor(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -306,30 +323,37 @@ $('editQuestionsBtn').onclick=openQuestionEditor;$('editRound').onchange=loadQue
 $('saveQuestion').onclick=()=>{const i=Number($('editRound').value);const q=$('editQuestion').value.trim();const english=[...document.querySelectorAll('.editAnswer')];const japanese=[...document.querySelectorAll('.editAnswerJP')];const points=[...document.querySelectorAll('.editPoints')];const hints=[...document.querySelectorAll('.editHint')];const answers=english.map((el,n)=>[el.value.trim(),Number(points[n].value),hints[n].value.trim(),japanese[n].value.trim()]);if(!q||answers.some(a=>!a[0]||!Number.isFinite(a[1])||a[1]<0)){alert('Please enter a question, all five answers, and valid non-negative points.');return;}customRounds[i]={q,qJP:$('editQuestionJP').value.trim(),a:answers};if(i===roundIndex){revealed=new Set();guessed=new Set();strikes=0;}$('editorBackdrop').classList.remove('open');render();$('guessFeedback').textContent=`Round ${i+1} saved. All connected viewer phones will receive the changes.`;};
 $('editRound').value=String(roundIndex);
 $('languageBtn').onclick=()=>{translationOn=!translationOn;document.getElementById('app').classList.toggle('show-jp',translationOn);$('languageBtn').textContent=translationOn?'日本語表示 / Show Japanese: ON':'日本語表示 / Show Japanese: OFF';$('languageBtn').setAttribute('aria-pressed',String(translationOn));render();};
-$('guessForm').addEventListener('submit',event=>{event.preventDefault();submitGuess($('guessInput').value);$('guessInput').value='';$('guessInput').focus();});
 $('nextBtn').onclick=nextRound;
-$('wordPower').onclick=()=>usePower('word');$('picturePower').onclick=()=>usePower('picture');$('choicePower').onclick=()=>usePower('choice');
 $('rulesBtn').onclick=()=>openModal('How to play',`<p><b>1.</b> Split into two teams. The highlighted team answers first.</p><p><b>2.</b> Read the question aloud. Click an answer tile to reveal it and add its points.</p><p><b>3.</b> If your team gets stuck, use one of the three hint powers. Each team can use each power only once for the entire game.</p><p><b>4.</b> Click “Switch team turn” to pass the turn. Click “Next question” when the round is finished.</p><p><b>5.</b> Highest score after 10 questions wins. Japanese answers are okay!</p><p><b>Host note:</b> These are sample survey-style points for party play, not results from a real survey.</p>`);
-$('resetBtn').onclick=()=>{roundIndex=0;scores=[0,0];activeTeam=0;revealed=new Set();used=[new Set(),new Set()];strikes=0;guessed=new Set();render();$('hintBox').classList.remove('show');$('guessInput').value='';$('guessFeedback').textContent='Type an answer and let the game check it!';};
+$('resetBtn').onclick=()=>{roundIndex=0;scores=[0,0];activeTeam=0;revealed=new Set();used=[new Set(),new Set()];strikes=0;guessed=new Set();render();$('guessFeedback').textContent='Game reset.';if(roomRef)roomRef.parent.child('session').update({powers:null,hints:null,guess:null,result:null});};
 if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const local=JSON.parse(localStorage.getItem('halloweenFeudCustomRounds')||'null');if(Array.isArray(local)){customRounds=local;loadedFromFirebase=true;}}catch(error){}};if(roomRef){roomRef.once('value').then(snapshot=>{const saved=snapshot.val();if(saved&&Array.isArray(saved.customRounds)){customRounds=saved.customRounds;loadedFromFirebase=true;customRounds.forEach((r,i)=>{r.qJP=r.qJP||questionJPFallback(i);r.a.forEach(a=>{if(a.length<4)a.push('');});});}else loadLocal();render();}).catch(error=>{console.error('Could not load saved questions:',error);loadLocal();render();});}else{loadLocal();render();}}
 </script>
 
 <script>
-/* ============ Phases, timers, player screen & team chat ============ */
+/* ============ Phases, timers, player answers, team hints & chat ============ */
 (()=>{
  const PLANNING_MS=60000, TURN_MS=30000;
  const sessionRef=roomRef&&roomRef.parent.child('session'), playersRef=sessionRef&&sessionRef.child('players');
  const $p=id=>document.getElementById(id);
- let myTeam=null,myName='',myKey='',sessionData={},chatRef=null,serverOffset=0;
+ let myTeam=null,myName='',myKey='',sessionData={},chatRef=null,serverOffset=0,answeredTurn=null;
  const now=()=>Date.now()+serverOffset;
- function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
- if(!sessionRef){ if(playerMode) $p('joinMessage').textContent='Could not connect to the game server.'; return; }
+ const escapeHtml=v=>String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const playerMessage=msg=>{const el=$p('joinMessage');if(el)el.textContent=msg;};
+ if(!sessionRef){ if(playerMode) playerMessage('Could not connect to the game server.'); return; }
  try{ firebase.database().ref('.info/serverTimeOffset').on('value',s=>{serverOffset=s.val()||0;}); }catch(e){}
+
+ const PICS={'Pumpkin':'🎃','Ghost':'👻','Witch':'🧙','Costume':'🧛','Spider':'🕷️','Snake':'🐍','Darkness':'🌑','Zombie':'🧟','Vampire':'🧛','Cat':'🐈‍⬛','Spider web':'🕸️','Skeleton':'💀','Coffin':'⚰️','Old furniture':'🪑','Chocolate':'🍫','Candy':'🍬','Cake':'🍰','Cookies':'🍪','Donut':'🍩','Black cat':'🐈‍⬛','Bat':'🦇','Owl':'🦉','Rat':'🐀','Cobweb':'🕸️','Candles':'🕯️','Skull':'💀','Balloons':'🎈','Haunted house':'🏚️','Cemetery':'⚰️','Castle':'🏰','Hospital':'🏥','School':'🏫','Trick or treat':'🍭','Please':'🙏','Thank you':'😊','Happy Halloween':'🎃','More candy':'🍬','Broom':'🧹','Cauldron':'⚗️','Potion':'🧪','Spell book':'📖'};
 
  /* ---------------- PLAYER SCREEN ---------------- */
  if(playerMode){
-  const playerMessage=msg=>{$p('joinMessage').textContent=msg;};
   const enterGame=()=>{$p('joinCard').classList.add('player-hidden');$p('playerGame').classList.remove('player-hidden');$p('playerTeamLabel').textContent='TEAM '+myTeam+' · '+myName;watchChat();};
+  function leaveGame(msg){
+   try{localStorage.removeItem('hf_player_key');localStorage.removeItem('hf_player_name');localStorage.removeItem('hf_player_team');}catch(e){}
+   if(chatRef){chatRef.off();chatRef=null;}
+   myKey='';myTeam=null;answeredTurn=null;
+   $p('playerGame').classList.add('player-hidden');$p('joinCard').classList.remove('player-hidden');$p('chatLog').innerHTML='';
+   playerMessage(msg||'');
+  }
   function join(team){
    myName=$p('playerName').value.trim();
    if(!myName){playerMessage('Please enter your name first.');return;}
@@ -356,14 +380,51 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
   }
   $p('chatForm').onsubmit=e=>{e.preventDefault();const text=$p('chatInput').value.trim();if(!text||!chatRef)return;chatRef.push({name:myName,text,at:now()});$p('chatInput').value='';};
 
+  // One answer per player turn
+  $p('answerForm').onsubmit=e=>{
+   e.preventDefault();
+   const s=sessionData||{};
+   if(!(s.phase==='answering'&&s.activePlayer&&s.activePlayer===myKey))return;
+   if(answeredTurn===s.turnId)return;
+   const text=$p('answerInput').value.trim();if(!text)return;
+   answeredTurn=s.turnId;
+   sessionRef.child('guess').set({turn:s.turnId,key:myKey,team:myTeam,name:myName,text,at:now()});
+   $p('answerInput').value='';
+  };
+
+  // Team hint powers (each team can use each power once per game)
+  function buildHint(kind){
+   const r=customRounds[roundIndex];if(!r)return null;
+   const hidden=r.a.map((a,i)=>({a,i})).filter(x=>!revealed.has(x.i));
+   if(!hidden.length)return null;
+   const pick=hidden[0];
+   if(kind==='word')return {title:'💬 One-Word Hint',content:pick.a[2]||'—',sub:'One keyword to help your team.'};
+   if(kind==='picture')return {title:'🖼️ Picture Hint',content:(PICS[pick.a[0]]||'🔍')+'  '+(pick.a[2]||''),sub:'What answer could it represent?'};
+   const pool=['Pumpkin','Ghost','Witch','Spider','Candy','Bat','Zombie','Vampire','Skeleton','Black cat'].filter(x=>x!==pick.a[0]);
+   const opts=[pick.a[0],pool[(roundIndex+1)%pool.length],pool[(roundIndex+4)%pool.length]].sort(()=>Math.random()-.5);
+   return {title:'🔎 Multiple Choice',content:opts.map((x,i)=>String.fromCharCode(65+i)+'. '+x).join('   '),sub:'One of these is on the board.'};
+  }
+  function usePower(kind){
+   const s=sessionData||{};
+   if(!myTeam||!(s.phase==='planning'||s.phase==='answering'))return;
+   const h=buildHint(kind);
+   if(!h){alert('No hidden answers left in this round.');return;}
+   sessionRef.child('powers/'+myTeam+'/'+kind).transaction(v=>v?undefined:{by:myName,at:now()},(err,committed)=>{
+    if(err||!committed)return;
+    sessionRef.child('hints/'+myTeam+'/'+kind).set({...h,round:roundIndex,by:myName});
+   });
+  }
+  $p('pwWord').onclick=()=>usePower('word');$p('pwPicture').onclick=()=>usePower('picture');$p('pwChoice').onclick=()=>usePower('choice');
+
   function renderPlayer(){
    const s=sessionData||{},phase=s.phase||'waiting';
+   const myTurn=phase==='answering'&&!!s.activePlayer&&s.activePlayer===myKey;
    // Timer & phase
    $p('phaseTitle').textContent=phase==='planning'?'🧠 Team planning':phase==='answering'?'🎤 Answering phase':phase==='finished'?'🏁 Game finished':'Waiting for host…';
    let msg='The host will start the planning phase.';
    if(phase==='planning')msg='Discuss your strategy with your team in the chat!';
    else if(phase==='answering'){
-    if(s.activePlayer&&s.activePlayer===myKey)msg='🎤 It\'s YOUR turn to answer!';
+    if(myTurn)msg='🎤 It\'s YOUR turn to answer!';
     else msg='Team '+s.activeTeam+' — '+escapeHtml(s.activePlayerName||'')+' is answering'+(s.activeTeam===myTeam?' (your teammate)':'');
    } else if(phase==='finished')msg='Thanks for playing!';
    $p('phaseMessage').innerHTML=msg;
@@ -371,13 +432,29 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
    const left=(phase==='planning'||phase==='answering')&&end?Math.max(0,Math.ceil((end-now())/1000)):null;
    $p('phaseClock').textContent=left===null?'—':left+'s';
    $p('pTimer').classList.toggle('urgent',left!==null&&left<=10);
-   $p('pTimer').classList.toggle('mine',phase==='answering'&&!!myKey&&s.activePlayer===myKey);
+   $p('pTimer').classList.toggle('mine',myTurn);
+   // Answer box (only for the player whose turn it is, once)
+   const answered=myTurn&&((s.guess&&s.guess.turn===s.turnId&&s.guess.key===myKey)||answeredTurn===s.turnId);
+   $p('answerBox').classList.toggle('player-hidden',!myTurn);
+   $p('answerInput').disabled=!myTurn||answered;$p('answerBtn').disabled=!myTurn||answered;
+   $p('answerNote').textContent=answered?'Answer submitted — waiting for the result…':'You can answer only once.';
+   // Result of the current turn (shown to everyone)
+   const res=s.result;const showRes=res&&res.turn===s.turnId&&phase==='answering';
+   $p('pResult').classList.toggle('player-hidden',!showRes);
+   if(showRes)$p('pResult').innerHTML=res.ok?('✅ '+escapeHtml(res.name)+' answered “'+escapeHtml(res.text)+'” — <b>'+escapeHtml(res.answer)+'</b> +'+res.points+' pts'):('❌ '+escapeHtml(res.name)+' answered “'+escapeHtml(res.text)+'” — not on the board');
    // Board (read-only, from host state)
-   const r=customRounds[roundIndex];if(!r)return;
-   $p('pRound').textContent=translationOn?`ラウンド ${roundIndex+1} / ${customRounds.length}`:`ROUND ${roundIndex+1} / ${customRounds.length}`;
-   $p('pQuestion').textContent=translationOn?(r.qJP||r.q):r.q;
-   $p('pAnswers').innerHTML=r.a.map((a,i)=>{const rev=revealed.has(i);const txt=translationOn?(a[3]||answerJP[a[0]]||a[0]):a[0];return `<div class="answer${rev?' revealed':''}"><span class="left"><span class="num">${i+1}</span><span class="answer-text ${rev?'visible':'hidden'}">${rev?escapeHtml(txt):'???????'}</span></span><span class="points">${rev?a[1]+(translationOn?' 点':' pts'):'—'}</span></div>`;}).join('');
+   const r=customRounds[roundIndex];
+   if(r){
+    $p('pRound').textContent=translationOn?`ラウンド ${roundIndex+1} / ${customRounds.length}`:`ROUND ${roundIndex+1} / ${customRounds.length}`;
+    $p('pQuestion').textContent=translationOn?(r.qJP||r.q):r.q;
+    $p('pAnswers').innerHTML=r.a.map((a,i)=>{const rev=revealed.has(i);const txt=translationOn?(a[3]||answerJP[a[0]]||a[0]):a[0];return `<div class="answer${rev?' revealed':''}"><span class="left"><span class="num">${i+1}</span><span class="answer-text ${rev?'visible':'hidden'}">${rev?escapeHtml(txt):'???????'}</span></span><span class="points">${rev?a[1]+(translationOn?' 点':' pts'):'—'}</span></div>`;}).join('');
+   }
    [0,1].forEach(t=>{$p('pScore'+t).textContent=scores[t];$p('pTeam'+t).classList.toggle('active',t===activeTeam);});
+   // Team powers & shared hints
+   const usedP=(s.powers&&s.powers[myTeam])||{};const canUse=phase==='planning'||phase==='answering';
+   [['pwWord','word'],['pwPicture','picture'],['pwChoice','choice']].forEach(([id,k])=>{const b=$p(id);b.disabled=!!usedP[k]||!canUse;b.classList.toggle('used',!!usedP[k]);});
+   const hints=Object.values((s.hints&&s.hints[myTeam])||{}).filter(h=>h.round===roundIndex);
+   $p('pHints').innerHTML=hints.map(h=>'<div class="phase-card" style="margin:8px 0 0"><b>'+escapeHtml(h.title)+'</b><div style="font-size:20px;font-weight:800;margin:6px 0">'+escapeHtml(h.content)+'</div><div class="small-note" style="margin:0">'+escapeHtml(h.sub)+' · used by '+escapeHtml(h.by)+'</div></div>').join('');
   }
 
   // Restore a previous join after refresh
@@ -385,33 +462,19 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
    const saved=localStorage.getItem('hf_player_key');
    if(saved){myKey=saved;myName=localStorage.getItem('hf_player_name')||'';myTeam=localStorage.getItem('hf_player_team')||null;if(myTeam){$p('playerName').value=myName;enterGame();}}
   }catch(e){}
-  sessionRef.on('value',s=>{sessionData=s.val()||{};renderPlayer();});
+  sessionRef.on('value',s=>{
+   sessionData=s.val()||{};
+   // If the host cleared the session, forget this device's old join
+   if(myKey&&myTeam&&!(sessionData.players&&sessionData.players[myKey]))leaveGame('The host cleared the game. Please join again.');
+   renderPlayer();
+  });
   setInterval(renderPlayer,250);
   return;
  }
 
- /* ---------------- HOST CONTROLS ---------------- */
+ /* ---------------- HOST CONTROLS (panel is in the page markup) ---------------- */
  if(viewerMode) return; // read-only viewer link
- const top=document.querySelector('.top-actions');
- const controls=document.createElement('div');
- controls.className='phase-card';
- controls.innerHTML=`<b>👥 Players &amp; timer</b>
-  <div class="host-clock"><div class="big" id="hostClock">—</div><div id="hostPhaseName">Phase: waiting</div><button class="btn-primary" id="startPlanning">▶ Start 1-minute planning</button><button class="btn-outline" id="finishPhase">End game</button></div>
-  <div class="roster"><div id="rosterA">Team A: —</div><div id="rosterB">Team B: —</div></div>
-  <details style="margin-top:10px"><summary style="cursor:pointer;color:#d9cbea">Setup (player limits, link)</summary>
-  <div class="host-settings">
-   <label>Team A max<input id="limitA" type="number" min="1" max="30" value="6"></label>
-   <label>Team B max<input id="limitB" type="number" min="1" max="30" value="6"></label>
-   <button class="btn-muted" id="saveLimits">Save limits</button>
-   <button class="btn-muted" id="copyPlayerLink">Copy player link</button>
-   <button class="btn-outline" id="clearSession">Clear players &amp; chat</button>
-  </div></details>
-  <p id="hostPhaseStatus" class="small-note">Players join with the player link. Planning lasts 60 seconds, then each Team A player answers for 30 seconds each (automatically advancing), followed by every Team B player.</p>`;
- controls.style.margin='16px 0 0';controls.style.padding='14px';
- const footer=document.querySelector('.footer-actions');
- footer.parentNode.insertBefore(controls,footer.nextSibling);   // sits right under Next player / Next question
-
- let cur={},lastHandledEnd=0;
+ let cur={},lastHandledEnd=0,processedTurn=null;
  const updateSession=obj=>sessionRef.update({...obj,updatedAt:now()});
 
  function setTurn(team,index){
@@ -423,30 +486,47 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
     return;
    }
    const [key,p]=list[index];
-   activeTeam=team==='A'?0:1; render();           // keep the main board's active team in sync
-   updateSession({phase:'answering',activeTeam:team,activePlayer:key,activePlayerName:p.name,turnIndex:index,endsAt:now()+TURN_MS});
+   activeTeam=team==='A'?0:1; render();           // keep the board's active team in sync
+   const endsAt=now()+TURN_MS;
+   updateSession({phase:'answering',activeTeam:team,activePlayer:key,activePlayerName:p.name,turnIndex:index,endsAt,turnId:endsAt});
    $p('hostPhaseStatus').textContent='Now answering: Team '+team+' — '+p.name+' (player '+(index+1)+' of '+list.length+', 30 seconds)';
   });
  }
 
- $p('saveLimits').onclick=()=>updateSession({limits:{A:Math.max(1,Math.min(30,Number($p('limitA').value)||1)),B:Math.max(1,Math.min(30,Number($p('limitB').value)||1))}});
+ // A player's single answer, checked by the host page against the board
+ function handleGuess(g){
+  const r=customRounds[roundIndex];const guess=normalizeAnswer(g.text||'');
+  const m=!guess?-1:r.a.findIndex((a,i)=>!revealed.has(i)&&(normalizeAnswer(a[0])===guess||normalizeAnswer(a[0]).includes(guess)&&guess.length>=4||normalizeAnswer(a[3]||'')===guess));
+  activeTeam=g.team==='A'?0:1;
+  let ok=false,points=0,answer='';
+  if(m>=0){ok=true;revealed.add(m);points=r.a[m][1];answer=r.a[m][0];scores[activeTeam]+=points;}
+  else{strikes=Math.min(strikes+1,3);}
+  render();
+  $p('guessFeedback').textContent=ok?`✅ ${g.name} (Team ${g.team}): “${g.text}” → ${answer} +${points}`:`❌ ${g.name} (Team ${g.team}): “${g.text}” is not on the board.`;
+  sessionRef.child('result').set({turn:g.turn,name:g.name,team:g.team,text:g.text,ok,answer,points,at:now()});
+ }
+
+ const limits=()=>({A:Math.max(1,Math.min(30,Number($p('limitA').value)||1)),B:Math.max(1,Math.min(30,Number($p('limitB').value)||1))});
+ $p('saveLimits').onclick=()=>updateSession({limits:limits()});
  $p('startPlanning').onclick=()=>{
-  lastHandledEnd=0;
-  updateSession({limits:{A:Math.max(1,Math.min(30,Number($p('limitA').value)||1)),B:Math.max(1,Math.min(30,Number($p('limitB').value)||1))},phase:'planning',endsAt:now()+PLANNING_MS,activeTeam:null,activePlayer:null,activePlayerName:null,turnIndex:0});
+  lastHandledEnd=0;processedTurn=null;
+  updateSession({limits:limits(),phase:'planning',endsAt:now()+PLANNING_MS,activeTeam:null,activePlayer:null,activePlayerName:null,turnIndex:0,turnId:null,guess:null,result:null,powers:null,hints:null});
   $p('hostPhaseStatus').textContent='Planning started: 60 seconds. Answering begins automatically.';
  };
- // The main panel's "Next player" button: skips to the next player (moves to Team B / finishes automatically)
- document.getElementById('nextPlayerBtn').onclick=()=>{lastHandledEnd=0;if(cur.phase==='answering')setTurn(cur.activeTeam||'A',(Number(cur.turnIndex)||0)+1);else if(cur.phase==='planning')setTurn('A',0);else setTurn('A',0);};
+ $p('nextPlayerBtn').onclick=()=>{lastHandledEnd=0;if(cur.phase==='answering')setTurn(cur.activeTeam||'A',(Number(cur.turnIndex)||0)+1);else setTurn('A',0);};
  $p('finishPhase').onclick=()=>updateSession({phase:'finished',endsAt:0,activeTeam:null,activePlayer:null,activePlayerName:null});
  $p('copyPlayerLink').onclick=async()=>{const u=new URL(location.href);u.search='';u.searchParams.set('player','1');try{await navigator.clipboard.writeText(u.href);$p('hostPhaseStatus').textContent='Player link copied.';}catch(e){prompt('Copy player link:',u.href);}};
- $p('clearSession').onclick=()=>{if(confirm('Remove all players, chat and phase state?'))sessionRef.remove().then(()=>{$p('hostPhaseStatus').textContent='Session cleared.';});};
+ $p('clearSession').onclick=()=>{if(confirm('Remove all players, chat, hints and phase state? Players will have to join again.'))sessionRef.remove().then(()=>{processedTurn=null;$p('hostPhaseStatus').textContent='Session cleared. Old devices will be asked to join again.';});};
 
- sessionRef.on('value',s=>{cur=s.val()||{};
+ sessionRef.on('value',s=>{
+  cur=s.val()||{};
   if(cur.limits){$p('limitA').value=cur.limits.A;$p('limitB').value=cur.limits.B;}
   const names=t=>Object.values(cur.players||{}).filter(p=>p.team===t).sort((a,b)=>a.joinedAt-b.joinedAt).map(p=>escapeHtml(p.name));
   const a=names('A'),b=names('B');
   $p('rosterA').innerHTML='<b>Team A ('+a.length+')</b>: '+(a.join(', ')||'—');
   $p('rosterB').innerHTML='<b>Team B ('+b.length+')</b>: '+(b.join(', ')||'—');
+  const g=cur.guess;
+  if(g&&cur.phase==='answering'&&g.turn===cur.turnId&&g.key===cur.activePlayer&&processedTurn!==g.turn){processedTurn=g.turn;handleGuess(g);}
  });
 
  // Host-driven automatic clock: planning → answering → each next player → next team → finished
