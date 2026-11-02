@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Family Feud</title>
+<title>NAKAMAFEUD</title>
 <style>
 :root {
   --site-primary: #0ea5e9;
@@ -139,7 +139,7 @@ body.player-mode #playerApp { display:block; }
   <div class="decor" aria-hidden="true"><span>⭐</span><span>🎉</span><span>🏆</span></div>
   <main>
     <header>
-      <div class="brand"><div class="logo">⭐</div><div><h1>Family Feud / ファミリーフュード</h1><div class="sub">Guess the top answers / 人気の答えを当てよう！</div></div></div>
+      <div class="brand"><div class="logo">⭐</div><div><h1>NAKAMAFEUD</h1><div class="sub">Guess the top answers / 人気の答えを当てよう！</div></div></div>
       <details id="topMenu" class="top-menu"><summary>☰ Menu / メニュー</summary><div class="top-actions"><button class="btn-muted" id="languageBtn" aria-pressed="false">日本語表示 / Show Japanese: OFF</button><button class="btn-primary" id="editQuestionsBtn">✏️ Edit Questions <span class="jp">/ 問題を編集</span></button><button class="btn-muted" id="rulesBtn">How to play / 遊び方</button><button class="btn-outline" id="resetBtn">↻ Reset / リセット</button></div></details>
     </header>
     <section class="scoreboard">
@@ -158,10 +158,12 @@ body.player-mode #playerApp { display:block; }
         <div class="phase-card" id="hostPanel" style="margin:16px 0 0;padding:14px">
           <b>👥 Players &amp; timer <span class="jp">/ プレイヤーとタイマー</span></b>
           <div class="host-clock"><div class="big" id="hostClock">—</div><div id="hostPhaseName">Phase: waiting</div></div>
+          <div class="host-settings" style="margin:12px 0 0"><label>First team to answer <span class="jp">/ 先攻チーム</span><select id="startTeamSel" style="display:block;padding:9px;border-radius:9px;margin-top:4px;min-width:170px"><option value="A">Team A / Aチーム</option><option value="B">Team B / Bチーム</option></select></label></div>
           <div class="footer-actions">
             <button class="btn-primary" id="startPlanning">▶ Start 1-minute planning <span class="jp">/ 1分の作戦タイム開始</span></button>
             <button class="btn-muted" id="nextPlayerBtn">Next player ⏭ <span class="jp">/ 次の人</span></button>
             <button class="btn-muted" id="revealBtn">👁 Reveal answers <span class="jp">/ 答えを表示</span></button>
+            <button class="btn-muted" id="gotoBtn">↩ Go to round… <span class="jp">/ ラウンドを選ぶ</span></button>
             <button class="btn-primary" id="nextBtn">Next round →</button>
             <button class="btn-outline" id="finishPhase">End game <span class="jp">/ ゲーム終了</span></button>
           </div>
@@ -171,6 +173,9 @@ body.player-mode #playerApp { display:block; }
               <label>Team A max <span class="jp">/ Aチーム最大人数</span><input id="limitA" type="number" min="1" max="30" value="6"></label>
               <label>Team B max <span class="jp">/ Bチーム最大人数</span><input id="limitB" type="number" min="1" max="30" value="6"></label>
               <button class="btn-muted" id="saveLimits">Save limits <span class="jp">/ 人数を保存</span></button>
+              <label>Rounds <span class="jp">/ ラウンド数</span><input id="cfgRounds" type="number" min="1" max="20" value="10"></label>
+              <label>Questions per round <span class="jp">/ 1ラウンドの問題数</span><input id="cfgPer" type="number" min="1" max="10" value="1"></label>
+              <button class="btn-muted" id="saveCfg">Save game format <span class="jp">/ 形式を保存</span></button>
               <button class="btn-muted" id="copyPlayerLink">Copy player link <span class="jp">/ プレイヤー用リンクをコピー</span></button>
               <button class="btn-outline" id="clearSession">Clear players &amp; chat <span class="jp">/ プレイヤーとチャットを消去</span></button>
             </div>
@@ -183,11 +188,12 @@ body.player-mode #playerApp { display:block; }
   </main>
 </div>
 <div class="modal-backdrop" id="editorBackdrop"><div class="modal" style="max-height:90vh;overflow:auto"><h2>✏️ Edit Questions <span class="jp">/ 問題を編集</span></h2><p>Changes are saved for all connected phones. <span class="jp">/ 変更はすべての端末に保存されます。</span></p><label for="editRound">Choose round <span class="jp">/ ラウンドを選択</span></label><select id="editRound" style="display:block;width:100%;padding:11px;margin:7px 0 14px;border-radius:9px"><option value="0">Round 1</option></select><label for="editQuestion">Question (English)</label><input id="editQuestion" style="display:block;width:100%;padding:11px;margin:7px 0 12px;border-radius:9px"><label for="editQuestionJP">Question (Japanese, optional)</label><input id="editQuestionJP" style="display:block;width:100%;padding:11px;margin:7px 0 14px;border-radius:9px"><div id="answerEditor"></div><div class="modal-actions"><button class="btn-muted" id="cancelEditor">Cancel <span class="jp">/ キャンセル</span></button><button class="btn-primary" id="saveQuestion">Save Round <span class="jp">/ 保存</span></button></div></div></div>
+<div class="modal-backdrop" id="gotoBackdrop"><div class="modal" style="max-height:90vh;overflow:auto"><h2>↩ Go to round <span class="jp">/ ラウンドを選ぶ</span></h2><p>Choose a round, check the preview (only you see this), then display it. <span class="jp">/ ラウンドを選んでプレビューを確認（ホストだけに表示）してから表示します。</span></p><select id="gotoSel" style="display:block;width:100%;padding:11px;margin:7px 0 12px;border-radius:9px"></select><div id="gotoPreview" class="phase-card" style="margin:0"></div><div class="modal-actions"><button class="btn-muted" id="gotoCancel">Cancel <span class="jp">/ キャンセル</span></button><button class="btn-primary" id="gotoGo">Display this round <span class="jp">/ このラウンドを表示</span></button></div></div></div>
 <div class="modal-backdrop" id="modalBackdrop"><div class="modal"><h2 id="modalTitle">How to play</h2><div id="modalBody"></div><div class="modal-actions"><button class="btn-primary" id="modalClose">Got it! <span class="jp">/ 了解！</span></button></div></div></div>
 
 <!-- ================= PLAYER SCREEN (?player=1) ================= -->
 <div id="playerApp">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h1>⭐ Family Feud</h1><button class="btn-muted" id="pLangBtn">日本語表示 / Show Japanese: OFF</button></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h1>⭐ NAKAMAFEUD</h1><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-muted" id="pRulesBtn">📖 How to play / 遊び方</button><button class="btn-muted" id="pLangBtn">日本語表示 / Show Japanese: OFF</button></span></div>
   <section class="phase-card" id="joinCard">
     <h2>Join your team / チームを選ぶ</h2>
     <label for="playerName">Your name / 名前</label>
@@ -202,6 +208,7 @@ body.player-mode #playerApp { display:block; }
       <div class="vs">VS</div>
       <div class="team" id="pTeam1"><div class="team-name">Team B <span class="jp">/ Bチーム</span></div><div class="score" id="pScore1">0</div></div>
     </div>
+    <div class="small-note" id="pStrikes" style="text-align:center;margin:0 0 8px"></div>
     <div class="p-timer" id="pTimer">
       <div class="eyebrow" id="phaseTitle">Waiting for host…</div>
       <div class="score" id="phaseClock">—</div>
@@ -275,27 +282,37 @@ const rounds = [
  {q:"Name something you say when you want candy.",a:[['Trick or treat',35,'Two words, starts with T'],['Please',25,'Polite word'],['Thank you',20,'After receiving'],['Happy Halloween',10,'Seasonal greeting'],['More candy',10,'Two sweet words']]},
  {q:"Name something you might see in a witch's room.",a:[['Broom',30,'Flying ride'],['Cauldron',25,'Big cooking pot'],['Potion',20,'Magic drink'],['Black cat',15,'Meow'],['Spell book',10,'Magic words']]}
 ];
-let roundIndex=0, scores=[0,0], activeTeam=0, revealed=new Set(), used=[new Set(),new Set()], strikes=0, guessed=new Set(), translationOn=false, showMissed=false;
+let roundIndex=0, scores=[0,0], activeTeam=0, revealed=new Set(), used=[new Set(),new Set()], strikes=[0,0], guessed=new Set(), translationOn=false, showMissed=false;
 let customRounds = JSON.parse(JSON.stringify(rounds));
 customRounds.forEach((r,i)=>{r.qJP=r.qJP||questionJPFallback(i);r.a.forEach(a=>{if(a.length<4)a.push('');});});
 function questionJPFallback(i){return ['ハロウィンで見かけるものは？','人が怖がるものは？','人気のハロウィン仮装は？','お化け屋敷にありそうなものは？','みんなが好きなお菓子は？','ハロウィンに関係する動物は？','ハロウィンの飾りに使うものは？','映画で幽霊が出そうな場所は？','お菓子をもらうときに言う言葉は？','魔女の部屋にありそうなものは？'][i]||'';}
 const questionJP=['ハロウィンで見かけるものは？','人が怖がるものは？','人気のハロウィン仮装は？','お化け屋敷にありそうなものは？','みんなが好きなお菓子は？','ハロウィンに関係する動物は？','ハロウィンの飾りに使うものは？','映画で幽霊が出そうな場所は？','お菓子をもらうときに言う言葉は？','魔女の部屋にありそうなものは？'];
 const answerJP={'Pumpkin':'かぼちゃ','Ghost':'おばけ','Witch':'魔女','Costume':'仮装','Spider':'クモ','Snake':'ヘビ','Darkness':'暗闇','Zombie':'ゾンビ','Vampire':'吸血鬼','Cat':'猫','Spider web':'クモの巣','Skeleton':'ガイコツ','Coffin':'棺桶','Old furniture':'古い家具','Chocolate':'チョコレート','Candy':'キャンディー','Cake':'ケーキ','Cookies':'クッキー','Donut':'ドーナツ','Black cat':'黒猫','Bat':'コウモリ','Owl':'フクロウ','Rat':'ネズミ','Cobweb':'クモの巣','Candles':'ろうそく','Skull':'ドクロ','Balloons':'風船','Haunted house':'お化け屋敷','Cemetery':'墓地','Castle':'城','Hospital':'病院','School':'学校','Trick or treat':'トリック・オア・トリート','Please':'お願いします','Thank you':'ありがとう','Happy Halloween':'ハッピーハロウィン','More candy':'もっとお菓子','Broom':'ほうき','Cauldron':'大釜','Potion':'魔法の薬','Spell book':'魔法の本'};
 const $=id=>document.getElementById(id);
+let cfg={rounds:10,per:1};
+const totalQ=()=>cfg.rounds*cfg.per;
+function qLabel(i){return tr('Round ','ラウンド ')+(Math.floor(i/cfg.per)+1)+(cfg.per>1?tr(' · Q',' · 問題')+(i%cfg.per+1):'');}
+function roundLabel(){const r=Math.floor(roundIndex/cfg.per)+1,q=roundIndex%cfg.per+1;return tr(`ROUND ${r} / ${cfg.rounds}`,`ラウンド ${r} / ${cfg.rounds}`)+(cfg.per>1?tr(` · QUESTION ${q} / ${cfg.per}`,` · 問題 ${q} / ${cfg.per}`):'');}
+function strikeText(){const a=Array.isArray(strikes)?strikes:[0,0];return tr(`❌ Strikes — Team A: ${a[0]} · Team B: ${a[1]}`,`❌ ミス — Aチーム: ${a[0]} · Bチーム: ${a[1]}`);}
+function ensureQuestions(){while(customRounds.length<totalQ()){const n=customRounds.length+1;customRounds.push({q:`New question ${n} — edit me`,qJP:'',a:[['Answer 1',30,'',''],['Answer 2',25,'',''],['Answer 3',20,'',''],['Answer 4',15,'',''],['Answer 5',10,'','']]});}}
+function advanceLabel(){if(roundIndex>=totalQ()-1)return tr('Finish game ✓','ゲーム終了 ✓');if(cfg.per>1&&roundIndex%cfg.per<cfg.per-1)return tr('Next question →','次の問題 →');return tr('Next round →','次のラウンド →');}
+function resetTurnSession(){if(roomRef&&!viewerMode)roomRef.parent.child('session').update({phase:'waiting',endsAt:0,activeTeam:null,nextTeam:null,activePlayer:null,activePlayerName:null,turnId:null,turnIndex:0,guess:null,result:null,updatedAt:Date.now()});}
 function render(){
- const r=customRounds[roundIndex]; $('roundCount').textContent=translationOn?`ラウンド ${roundIndex+1} / ${customRounds.length}`:`ROUND ${roundIndex+1} / ${customRounds.length}`; $('question').textContent=translationOn?(r.qJP||r.q):r.q;
+ const r=customRounds[roundIndex]; $('roundCount').textContent=roundLabel(); $('question').textContent=translationOn?(r.qJP||r.q):r.q;
  $('roundPoints').textContent=translationOn?`${r.a.reduce((s,a,i)=>s+(revealed.has(i)?a[1]:0),0)} / 100 点`:`${r.a.reduce((s,a,i)=>s+(revealed.has(i)?a[1]:0),0)} / 100 points found`;
- $('strikes').textContent=translationOn?`❌ ミス: ${strikes} / 3`:`❌ Strikes: ${strikes} / 3`;
+ $('strikes').textContent=strikeText();
  $('answers').innerHTML='';
  r.a.forEach((a,i)=>{const b=document.createElement('div');const vis=revealed.has(i)||showMissed;b.className='answer'+(revealed.has(i)?' revealed':(vis?' missed':''));const answer=translationOn?(a[3]||answerJP[a[0]]||a[0]):a[0];b.innerHTML=`<span class="left"><span class="num">${i+1}</span><span class="answer-text ${vis?'visible':'hidden'}">${vis?answer:'???????'}</span></span><span class="points">${vis?a[1]+(translationOn?' 点':' pts'):'—'}</span>`;$('answers').appendChild(b);});
  [0,1].forEach(t=>{$('score'+t).textContent=scores[t];$('team'+t).classList.toggle('active',t===activeTeam);});
  $('turnBanner').textContent=translationOn?`🎤 ${activeTeam===0?'Aチーム':'Bチーム'}の番です`:`🎤 ${activeTeam===0?'Team A':'Team B'}'s turn`;
  
- $('nextBtn').textContent=translationOn?(roundIndex===rounds.length-1?'ゲーム終了 ✓':'次のラウンド →'):(roundIndex===rounds.length-1?'Finish game ✓':'Next round →');
+ $('nextBtn').textContent=advanceLabel();
+ ['startPlanning','nextPlayerBtn','revealBtn','finishPhase'].forEach(id=>{$(id).disabled=showMissed;});   // after reveal only Next round / Go to round remain
+ if(!viewerMode){[['cfgRounds',cfg.rounds],['cfgPer',cfg.per]].forEach(([id,v])=>{if(document.activeElement!==$(id))$(id).value=v;});}
  if(!viewerMode) publishState();
 }
 function publishState(){
- const state={roundIndex,scores,activeTeam,revealed:[...revealed],strikes,translationOn,showMissed,customRounds,updatedAt:Date.now()};
+ const state={roundIndex,scores,activeTeam,revealed:[...revealed],strikes,translationOn,showMissed,config:cfg,customRounds,updatedAt:Date.now()};
  try { localStorage.setItem('halloweenFeudCustomRounds', JSON.stringify(customRounds)); } catch(error) {}
  if (roomRef) roomRef.set(state).catch(error=>console.error('Could not publish game state:',error));
 }
@@ -305,7 +322,7 @@ if(viewerMode){
   if(!state)return;
   roundIndex=state.roundIndex??0;scores=state.scores??[0,0];activeTeam=state.activeTeam??0;
   if(Array.isArray(state.customRounds)){customRounds=state.customRounds;customRounds.forEach((r,i)=>{r.qJP=r.qJP||questionJPFallback(i);r.a.forEach(a=>{if(a.length<4)a.push('');});});}
-  revealed=new Set(state.revealed??[]);strikes=state.strikes??0;translationOn=!!state.translationOn;showMissed=!!state.showMissed;
+  revealed=new Set(state.revealed??[]);strikes=Array.isArray(state.strikes)?state.strikes:[0,0];translationOn=!!state.translationOn;showMissed=!!state.showMissed;if(state.config&&state.config.rounds)cfg={rounds:+state.config.rounds||10,per:+state.config.per||1};ensureQuestions();
   if(!playerMode)document.body.classList.toggle('show-jp',translationOn);
   $('languageBtn').textContent=translationOn?'日本語表示 / Show Japanese: ON':'日本語表示 / Show Japanese: OFF';
   $('languageBtn').setAttribute('aria-pressed',String(translationOn));
@@ -324,33 +341,42 @@ function normalizeAnswer(value){return value.toLocaleLowerCase().normalize('NFD'
 function submitGuess(value){const guess=normalizeAnswer(value);if(!guess)return;const r=customRounds[roundIndex];const match=r.a.findIndex((a,i)=>!revealed.has(i)&&(normalizeAnswer(a[0])===guess||normalizeAnswer(a[0]).includes(guess)&&guess.length>=4||normalizeAnswer(a[3]||'')===guess));if(match>=0){revealed.add(match);scores[activeTeam]+=r.a[match][1];$('guessFeedback').textContent=`✅ Correct! ${r.a[match][0]} — ${r.a[match][1]} points for ${$('name'+activeTeam).textContent}.`;render();$('guessFeedback').textContent=`✅ Correct! ${r.a[match][0]} — ${r.a[match][1]} points for ${$('name'+activeTeam).textContent}.`;return;}if(guessed.has(guess)){$('guessFeedback').textContent='That answer has already been tried. Try another one!';return;}guessed.add(guess);strikes++;if(strikes>=3){$('guessFeedback').textContent='❌ Three strikes! Switch to the other team.';render();$('guessFeedback').textContent='❌ Three strikes! Switch to the other team.';activeTeam=1-activeTeam;strikes=0;render();$('guessFeedback').textContent='Other team’s turn! Enter your guess.';}else{$('guessFeedback').textContent=`❌ Not on the board. ${3-strikes} ${3-strikes===1?'strike':'strikes'} left.`;render();$('guessFeedback').textContent=`❌ Not on the board. ${3-strikes} ${3-strikes===1?'strike':'strikes'} left.`;}}
 function adjustScore(t,n){scores[t]=Math.max(0,scores[t]+n);render();}
 function switchTeam(){activeTeam=1-activeTeam;render();}
-function nextRound(){if(roundIndex===rounds.length-1){const tn=t=>translationOn?(t===0?'Aチーム':'Bチーム'):(t===0?'Team A':'Team B');const w=scores[0]>scores[1]?0:1;const winner=scores[0]===scores[1]?(translationOn?'引き分け！':'It is a tie!'):(translationOn?tn(w)+'の勝ち！':tn(w)+' wins!');openModal(translationOn?'🏆 ゲーム終了！':'🏆 Game over!',`<p style="font-size:22px;font-weight:800;color:#ffd36b">${winner}</p><p>${translationOn?'最終スコア':'Final score'}: ${tn(0)} ${scores[0]} — ${tn(1)} ${scores[1]}</p><p>${translationOn?'もう一度遊ぶにはリセットを押してください。':'Press Reset to play again.'}</p>`);return;}roundIndex++;revealed=new Set();showMissed=false;strikes=0;guessed=new Set();activeTeam=1-activeTeam;render();$('guessFeedback').textContent=translationOn?'新しい問題！':'New question!';}
+function nextRound(){
+ if(roundIndex>=totalQ()-1){const tn=t=>translationOn?(t===0?'Aチーム':'Bチーム'):(t===0?'Team A':'Team B');const w=scores[0]>scores[1]?0:1;const winner=scores[0]===scores[1]?(translationOn?'引き分け！':'It is a tie!'):(translationOn?tn(w)+'の勝ち！':tn(w)+' wins!');openModal(translationOn?'🏆 ゲーム終了！':'🏆 Game over!',`<p style="font-size:22px;font-weight:800;color:#ffd36b">${winner}</p><p>${translationOn?'最終スコア':'Final score'}: ${tn(0)} ${scores[0]} — ${tn(1)} ${scores[1]}</p><p>${translationOn?'もう一度遊ぶにはリセットを押してください。':'Press Reset to play again.'}</p>`);return;}
+ roundIndex++;revealed=new Set();showMissed=false;strikes=[0,0];guessed=new Set();activeTeam=$('startTeamSel').value==='B'?1:0;render();resetTurnSession();$('guessFeedback').textContent=translationOn?'新しい問題！':'New question!';
+}
+function previewGoto(){const r=customRounds[Number($('gotoSel').value)];if(!r)return;$('gotoPreview').innerHTML='<b>'+escapeEditor(translationOn&&r.qJP?r.qJP:r.q)+'</b><ol style="margin:8px 0 0;padding-left:22px">'+r.a.map(a=>'<li>'+escapeEditor(translationOn?(a[3]||answerJP[a[0]]||a[0]):a[0])+' <span style="color:#ffd36b">('+a[1]+')</span></li>').join('')+'</ol>';}
+function openGoto(){const sel=$('gotoSel');sel.innerHTML=Array.from({length:totalQ()},(_,i)=>`<option value="${i}">${escapeEditor(qLabel(i))} — ${escapeEditor((customRounds[i].q||'').slice(0,48))}</option>`).join('');sel.value=String(roundIndex);previewGoto();$('gotoBackdrop').classList.add('open');}
+function goToRound(){const i=Number($('gotoSel').value);if(!(i>=0&&i<totalQ()))return;roundIndex=i;revealed=new Set();showMissed=false;strikes=[0,0];guessed=new Set();activeTeam=$('startTeamSel').value==='B'?1:0;$('gotoBackdrop').classList.remove('open');render();resetTurnSession();$('guessFeedback').textContent=translationOn?`${qLabel(i)} を表示しました。`:`Now showing ${qLabel(i)}.`;}
 function openModal(title,body){$('modalTitle').innerHTML=title;$('modalBody').innerHTML=body;$('modalBackdrop').classList.add('open');}
 $('modalClose').onclick=()=>$('modalBackdrop').classList.remove('open');
 function escapeEditor(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function openQuestionEditor(){const select=$('editRound');select.innerHTML=customRounds.map((r,i)=>`<option value="${i}">Round ${i+1}</option>`).join('');select.value=String(roundIndex);loadQuestionEditor();$('editorBackdrop').classList.add('open');}
+function openQuestionEditor(){const select=$('editRound');select.innerHTML=customRounds.map((r,i)=>`<option value="${i}">${escapeEditor(qLabel(i))}${i>=totalQ()?" (unused)":""}</option>`).join('');select.value=String(roundIndex);loadQuestionEditor();$('editorBackdrop').classList.add('open');}
 function loadQuestionEditor(){const i=Number($('editRound').value)||0;const r=customRounds[i];$('editQuestion').value=r.q;$('editQuestionJP').value=r.qJP||'';$('answerEditor').innerHTML=r.a.map((a,n)=>`<div style="padding:10px;margin:10px 0;background:#1e3350;border-radius:10px"><b>Answer ${n+1} <span class="jp">/ 答え${n+1}</span></b><input class="editAnswer" aria-label="Answer ${n+1} in English" value="${escapeEditor(a[0])}" placeholder="Answer in English" style="display:block;width:100%;padding:9px;margin:6px 0"><input class="editAnswerJP" aria-label="Answer ${n+1} in Japanese" value="${escapeEditor(a[3]||'')}" placeholder="Answer in Japanese (optional)" style="display:block;width:100%;padding:9px;margin:6px 0"><input class="editPoints" type="number" min="0" value="${Number(a[1])||0}" placeholder="Points" style="display:block;width:100%;padding:9px;margin:6px 0"><input class="editHint" value="${escapeEditor(a[2])}" placeholder="Hint" style="display:block;width:100%;padding:9px;margin:6px 0"></div>`).join('');}
 $('editQuestionsBtn').onclick=openQuestionEditor;$('editRound').onchange=loadQuestionEditor;$('cancelEditor').onclick=()=>$('editorBackdrop').classList.remove('open');
-$('saveQuestion').onclick=()=>{const i=Number($('editRound').value);const q=$('editQuestion').value.trim();const english=[...document.querySelectorAll('.editAnswer')];const japanese=[...document.querySelectorAll('.editAnswerJP')];const points=[...document.querySelectorAll('.editPoints')];const hints=[...document.querySelectorAll('.editHint')];const answers=english.map((el,n)=>[el.value.trim(),Number(points[n].value),hints[n].value.trim(),japanese[n].value.trim()]);if(!q||answers.some(a=>!a[0]||!Number.isFinite(a[1])||a[1]<0)){alert('Please enter a question, all five answers, and valid non-negative points.');return;}customRounds[i]={q,qJP:$('editQuestionJP').value.trim(),a:answers};if(i===roundIndex){revealed=new Set();showMissed=false;guessed=new Set();strikes=0;}$('editorBackdrop').classList.remove('open');render();$('guessFeedback').textContent=`Round ${i+1} saved. All connected viewer phones will receive the changes.`;};
+$('saveQuestion').onclick=()=>{const i=Number($('editRound').value);const q=$('editQuestion').value.trim();const english=[...document.querySelectorAll('.editAnswer')];const japanese=[...document.querySelectorAll('.editAnswerJP')];const points=[...document.querySelectorAll('.editPoints')];const hints=[...document.querySelectorAll('.editHint')];const answers=english.map((el,n)=>[el.value.trim(),Number(points[n].value),hints[n].value.trim(),japanese[n].value.trim()]);if(!q||answers.some(a=>!a[0]||!Number.isFinite(a[1])||a[1]<0)){alert('Please enter a question, all five answers, and valid non-negative points.');return;}customRounds[i]={q,qJP:$('editQuestionJP').value.trim(),a:answers};if(i===roundIndex){revealed=new Set();showMissed=false;guessed=new Set();strikes=[0,0];}$('editorBackdrop').classList.remove('open');render();$('guessFeedback').textContent=`Round ${i+1} saved. All connected viewer phones will receive the changes.`;};
 $('editRound').value=String(roundIndex);
 $('languageBtn').onclick=()=>{translationOn=!translationOn;if(!playerMode)document.body.classList.toggle('show-jp',translationOn);$('languageBtn').textContent=translationOn?'日本語表示 / Show Japanese: ON':'日本語表示 / Show Japanese: OFF';$('languageBtn').setAttribute('aria-pressed',String(translationOn));render();};
-$('nextBtn').onclick=nextRound;$('revealBtn').onclick=()=>{showMissed=true;render();};
-$('rulesBtn').onclick=()=>openModal('How to play <span class="jp">/ 遊び方</span>',`<p><b>1.</b> Split into two teams. Players open the player link, enter a name and join Team A or B. <span class="jp">/ 2チームに分かれます。プレイヤー用リンクを開き、名前を入力してAまたはBチームに参加します。</span></p><p><b>2.</b> The host presses “Start 1-minute planning”. Teams discuss in their team chat. <span class="jp">/ ホストが「1分の作戦タイム開始」を押します。チームのチャットで相談しましょう。</span></p><p><b>3.</b> Then each player gets 30 seconds, one at a time (Team A first, then Team B), to type ONE answer on their own phone. The turn ends as soon as they answer. <span class="jp">/ その後、1人ずつ（Aチーム→Bチーム）30秒以内に自分のスマホで答えを1回だけ入力します。回答するとすぐ次の人に交代します。</span></p><p><b>4.</b> Each team can use each hint power once per game, from the players’ screens. <span class="jp">/ ヒントパワーは各チーム1ゲームにつき1回ずつ、プレイヤー画面から使えます。</span></p><p><b>5.</b> The host can press “Reveal answers” to show the missed answers, then “Next round”. <span class="jp">/ ホストは「答えを表示」で見逃した答えを見せてから「次のラウンド」へ進みます。</span></p><p><b>6.</b> Highest score after 10 rounds wins. Japanese answers are okay! <span class="jp">/ 10ラウンド後に最高得点のチームが勝ち。日本語の答えもOK！</span></p><p><b>Host note:</b> These are sample survey-style points for party play, not results from a real survey. <span class="jp">/ ホストメモ：点数はパーティー用のサンプルで、実際の調査結果ではありません。</span></p>`);
-$('resetBtn').onclick=()=>{roundIndex=0;scores=[0,0];activeTeam=0;revealed=new Set();showMissed=false;used=[new Set(),new Set()];strikes=0;guessed=new Set();render();$('guessFeedback').textContent='Game reset.';if(roomRef)roomRef.parent.child('session').update({powers:null,hints:null,guess:null,result:null});};
-if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const local=JSON.parse(localStorage.getItem('halloweenFeudCustomRounds')||'null');if(Array.isArray(local)){customRounds=local;loadedFromFirebase=true;}}catch(error){}};if(roomRef){roomRef.once('value').then(snapshot=>{const saved=snapshot.val();if(saved&&Array.isArray(saved.customRounds)){customRounds=saved.customRounds;loadedFromFirebase=true;customRounds.forEach((r,i)=>{r.qJP=r.qJP||questionJPFallback(i);r.a.forEach(a=>{if(a.length<4)a.push('');});});}else loadLocal();render();}).catch(error=>{console.error('Could not load saved questions:',error);loadLocal();render();});}else{loadLocal();render();}}
+$('nextBtn').onclick=nextRound;
+$('gotoBtn').onclick=openGoto;$('gotoSel').onchange=previewGoto;$('gotoCancel').onclick=()=>$('gotoBackdrop').classList.remove('open');$('gotoGo').onclick=goToRound;
+$('saveCfg').onclick=()=>{const R=Math.max(1,Math.min(20,Number($('cfgRounds').value)||1)),Q=Math.max(1,Math.min(10,Number($('cfgPer').value)||1));if(R*Q>60){alert(tr('Too many questions (max 60 in total).','問題数が多すぎます（合計60問まで）。'));return;}cfg={rounds:R,per:Q};ensureQuestions();if(roundIndex>totalQ()-1){roundIndex=totalQ()-1;revealed=new Set();showMissed=false;strikes=[0,0];guessed=new Set();}render();$('guessFeedback').textContent=tr(`Game format saved: ${R} rounds × ${Q} question${Q>1?'s':''}. Edit new questions in the menu → Edit Questions.`,`ゲーム形式を保存しました：${R}ラウンド × ${Q}問。新しい問題はメニューの「問題を編集」で編集できます。`);};
+const RULES_TITLE='How to play <span class="jp">/ 遊び方</span>';
+function rulesHTML(){return `<p><b>1.</b> Players open the player link, enter a name and join Team A or Team B. <span class="jp">/ プレイヤーはプレイヤー用リンクを開き、名前を入力してAチームかBチームに参加します。</span></p><p><b>2.</b> The host chooses which team answers first and starts the 1-minute planning. Use your team chat to plan. <span class="jp">/ ホストが先攻チームを選んで1分の作戦タイムを始めます。チームのチャットで相談しましょう。</span></p><p><b>3.</b> Then players answer one at a time, 30 seconds each, with ONE answer typed on their own phone. The turn ends as soon as they answer. <span class="jp">/ その後、1人ずつ30秒以内に自分のスマホで答えを1回だけ入力します。回答するとすぐ次の人に交代します。</span></p><p><b>4.</b> When the first team is done, there is a 15-second countdown before the other team starts. <span class="jp">/ 先攻チームが終わると、15秒のカウントダウンのあと、もう一方のチームが始まります。</span></p><p><b>5.</b> Correct answers earn points. Each wrong answer is a strike for that team only — strikes are counted separately. <span class="jp">/ 正解で得点。まちがいはそのチームだけのミスになります（ミスはチームごとに数えます）。</span></p><p><b>6.</b> Each team can use each hint power once per game, from the players’ screens. <span class="jp">/ ヒントパワーは各チーム1ゲームにつき1回ずつ、プレイヤー画面から使えます。</span></p><p><b>7.</b> The host can reveal the missed answers — everything then stops until the host moves on to the next round. <span class="jp">/ ホストが見逃した答えを表示すると、次のラウンドに進むまですべて止まります。</span></p><p><b>8.</b> The host sets the number of rounds and questions per round. Highest score at the end wins. Japanese answers are okay! <span class="jp">/ ラウンド数と1ラウンドの問題数はホストが決めます。最後に最高得点のチームが勝ち。日本語の答えもOK！</span></p><p><b>Host note:</b> These are sample survey-style points for party play, not results from a real survey. <span class="jp">/ ホストメモ：点数はパーティー用のサンプルで、実際の調査結果ではありません。</span></p>`;}
+$('rulesBtn').onclick=()=>openModal(RULES_TITLE,rulesHTML());
+$('resetBtn').onclick=()=>{roundIndex=0;scores=[0,0];activeTeam=0;revealed=new Set();showMissed=false;used=[new Set(),new Set()];strikes=[0,0];guessed=new Set();render();$('guessFeedback').textContent='Game reset.';if(roomRef)roomRef.parent.child('session').update({powers:null,hints:null,guess:null,result:null});resetTurnSession();};
+if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const local=JSON.parse(localStorage.getItem('halloweenFeudCustomRounds')||'null');if(Array.isArray(local)){customRounds=local;loadedFromFirebase=true;}}catch(error){}};if(roomRef){roomRef.once('value').then(snapshot=>{const saved=snapshot.val();if(saved&&saved.config&&saved.config.rounds)cfg={rounds:+saved.config.rounds||10,per:+saved.config.per||1};if(saved&&Array.isArray(saved.customRounds)){customRounds=saved.customRounds;loadedFromFirebase=true;customRounds.forEach((r,i)=>{r.qJP=r.qJP||questionJPFallback(i);r.a.forEach(a=>{if(a.length<4)a.push('');});});}else loadLocal();ensureQuestions();render();}).catch(error=>{console.error('Could not load saved questions:',error);loadLocal();render();});}else{loadLocal();render();}}
 </script>
 
 <script>
-/* ============ Phases, timers, player answers, team hints & chat ============ */
+/* ============ Phases, timers, player answers, team hints, chat & rules ============ */
 (()=>{
- const PLANNING_MS=60000, TURN_MS=30000;
+ const PLANNING_MS=60000, TURN_MS=30000, SWITCH_MS=15000, LIVE=['planning','answering','switching'];
  const sessionRef=roomRef&&roomRef.parent.child('session'), playersRef=sessionRef&&sessionRef.child('players');
  const $p=id=>document.getElementById(id);
- let myTeam=null,myName='',myKey='',sessionData={},chatRef=null,serverOffset=0,answeredTurn=null;
+ let myTeam=null,myName='',myKey='',sessionData={},chatRef=null,serverOffset=0,answeredTurn=null,dismissedRules=null,rulesShownAt=null;
  const now=()=>Date.now()+serverOffset;
  const escapeHtml=v=>String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const playerMessage=msg=>{const el=$p('joinMessage');if(el)el.textContent=msg;};
- const TN=t=>tr('Team '+t,t+'チーム');
  if(!sessionRef){ if(playerMode) playerMessage(tr('Could not connect to the game server.','ゲームサーバーに接続できません。')); return; }
  try{ firebase.database().ref('.info/serverTimeOffset').on('value',s=>{serverOffset=s.val()||0;}); }catch(e){}
 
@@ -360,6 +386,7 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
   picture:['🖼️ Picture Hint','🖼️ 絵文字ヒント','What answer could it represent?','どんな答えを表している？'],
   choice:['🔎 Multiple Choice','🔎 3択ヒント','One of these is on the board.','このうち1つがボードにあります。']
  };
+ const leftSecs=s=>{const end=Number(s.endsAt||0);return LIVE.includes(s.phase)&&end?Math.max(0,Math.ceil((end-now())/1000)):null;};
 
  /* ---------------- PLAYER SCREEN ---------------- */
  if(playerMode){
@@ -370,6 +397,15 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
    renderPlayer();
   };
   $p('pLangBtn').onclick=()=>setLang(!playerJP);
+  $p('pRulesBtn').onclick=()=>openModal(RULES_TITLE,rulesHTML());
+  // The host's "How to play" is shown on every player screen
+  $p('modalClose').addEventListener('click',()=>{if(rulesShownAt!==null)dismissedRules=rulesShownAt;rulesShownAt=null;});
+  function syncRules(){
+   const ru=sessionData.rules;
+   if(ru&&ru.open){
+    if(ru.at!==dismissedRules&&rulesShownAt!==ru.at){openModal(RULES_TITLE,rulesHTML());rulesShownAt=ru.at;}
+   }else if(rulesShownAt!==null){$p('modalBackdrop').classList.remove('open');rulesShownAt=null;}
+  }
 
   const enterGame=()=>{$p('joinCard').classList.add('player-hidden');$p('playerGame').classList.remove('player-hidden');watchChat();};
   function leaveGame(msg){
@@ -431,7 +467,7 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
   }
   function usePower(kind){
    const s=sessionData||{};
-   if(!myTeam||!(s.phase==='planning'||s.phase==='answering'))return;
+   if(!myTeam||!(s.phase==='planning'||s.phase==='answering'||s.phase==='switching'))return;
    const h=buildHint(kind);
    if(!h){alert(tr('No hidden answers left in this round.','このラウンドに隠れた答えはありません。'));return;}
    sessionRef.child('powers/'+myTeam+'/'+kind).transaction(v=>v?undefined:{by:myName,at:now()},(err,committed)=>{
@@ -447,17 +483,24 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
    const pts=tr(' pts',' 点');
    if(myTeam)$p('playerTeamLabel').textContent=tr('TEAM '+myTeam+' · '+myName,myTeam+'チーム · '+myName);
    // Timer & phase
-   $p('phaseTitle').textContent=phase==='planning'?tr('🧠 Team planning','🧠 チーム作戦会議'):phase==='answering'?tr('🎤 Answering phase','🎤 回答フェーズ'):phase==='finished'?tr('🏁 Game finished','🏁 ゲーム終了'):tr('Waiting for host…','ホストを待っています…');
-   let msg=tr('The host will start the planning phase.','ホストが作戦タイムを始めます。');
+   const titles={
+    planning:tr('🧠 Team planning','🧠 チーム作戦会議'),answering:tr('🎤 Answering phase','🎤 回答フェーズ'),
+    switching:tr('⏳ Switching teams','⏳ チーム交代'),revealed:tr('👁 Answers revealed','👁 答え発表'),
+    finished:tr('🏁 All turns done','🏁 全員の回答が終わりました'),waiting:tr('Waiting for host…','ホストを待っています…')
+   };
+   $p('phaseTitle').textContent=titles[phase]||titles.waiting;
+   let msg=tr('The host will start the next round.','ホストが次のラウンドを始めます。');
    if(phase==='planning')msg=tr('Discuss your strategy with your team in the chat!','チャットで作戦を相談しよう！');
    else if(phase==='answering'){
     const nm=escapeHtml(s.activePlayerName||''),mate=s.activeTeam===myTeam;
     if(myTurn)msg=tr("🎤 It's YOUR turn to answer!",'🎤 あなたの番です！答えてください！');
     else msg=tr('Team '+s.activeTeam+' — '+nm+' is answering'+(mate?' (your teammate)':''),s.activeTeam+'チーム — '+nm+'さんが回答中'+(mate?'（チームメイト）':''));
-   } else if(phase==='finished')msg=tr('Thanks for playing!','ありがとうございました！');
+   }else if(phase==='switching'){
+    msg=s.nextTeam===myTeam?tr('Your team answers next. Get ready!','次はあなたのチームです。準備して！'):tr('Team '+s.nextTeam+' answers next.',s.nextTeam+'チームが次に回答します。');
+   }else if(phase==='revealed')msg=tr('Look at what was missed! Wait for the next round.','見逃した答えを確認しよう！次のラウンドを待ちましょう。');
+   else if(phase==='finished')msg=tr('Waiting for the host…','ホストを待っています…');
    $p('phaseMessage').innerHTML=msg;
-   const end=Number(s.endsAt||0);
-   const left=(phase==='planning'||phase==='answering')&&end?Math.max(0,Math.ceil((end-now())/1000)):null;
+   const left=leftSecs(s);
    $p('phaseClock').textContent=left===null?'—':left+tr('s','秒');
    $p('pTimer').classList.toggle('urgent',left!==null&&left<=10);
    $p('pTimer').classList.toggle('mine',myTurn);
@@ -478,13 +521,14 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
    // Board (read-only, from host state)
    const r=customRounds[roundIndex];
    if(r){
-    $p('pRound').textContent=tr(`ROUND ${roundIndex+1} / ${customRounds.length}`,`ラウンド ${roundIndex+1} / ${customRounds.length}`);
+    $p('pRound').textContent=roundLabel();
     $p('pQuestion').textContent=playerJP?(r.qJP||r.q):r.q;
     $p('pAnswers').innerHTML=r.a.map((a,i)=>{const sc=revealed.has(i);const rev=sc||showMissed;const txt=playerJP?(a[3]||answerJP[a[0]]||a[0]):a[0];return `<div class="answer${sc?' revealed':(rev?' missed':'')}"><span class="left"><span class="num">${i+1}</span><span class="answer-text ${rev?'visible':'hidden'}">${rev?escapeHtml(txt):'???????'}</span></span><span class="points">${rev?a[1]+pts:'—'}</span></div>`;}).join('');
    }
    [0,1].forEach(t=>{$p('pScore'+t).textContent=scores[t];$p('pTeam'+t).classList.toggle('active',t===activeTeam);});
+   $p('pStrikes').textContent=strikeText();
    // Team powers & shared hints
-   const usedP=(s.powers&&s.powers[myTeam])||{};const canUse=phase==='planning'||phase==='answering';
+   const usedP=(s.powers&&s.powers[myTeam])||{};const canUse=phase==='planning'||phase==='answering'||phase==='switching';
    [['pwWord','word'],['pwPicture','picture'],['pwChoice','choice']].forEach(([id,k])=>{const b=$p(id);b.disabled=!!usedP[k]||!canUse;b.classList.toggle('used',!!usedP[k]);});
    const hints=Object.values((s.hints&&s.hints[myTeam])||{}).filter(h=>h.round===roundIndex);
    $p('pHints').innerHTML=hints.map(h=>{const t=HT[h.kind];const title=t?tr(t[0],t[1]):h.title,sub=t?tr(t[2],t[3]):h.sub;return '<div class="phase-card" style="margin:8px 0 0"><b>'+escapeHtml(title)+'</b><div style="font-size:20px;font-weight:800;margin:6px 0">'+escapeHtml(h.content)+'</div><div class="small-note" style="margin:0">'+escapeHtml(sub)+' · '+tr('used by','使用者:')+' '+escapeHtml(h.by)+'</div></div>';}).join('');
@@ -500,6 +544,7 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
    sessionData=s.val()||{};
    // If the host cleared the session, forget this device's old join
    if(myKey&&myTeam&&!(sessionData.players&&sessionData.players[myKey]))leaveGame(tr('The host cleared the game. Please join again.','ホストがゲームをリセットしました。もう一度参加してください。'));
+   syncRules();
    renderPlayer();
   });
   setInterval(renderPlayer,250);
@@ -511,20 +556,34 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
  let cur={},lastHandledEnd=0,processedTurn=null;
  const updateSession=obj=>sessionRef.update({...obj,updatedAt:now()});
  const setStatus=(en,jp)=>{$p('hostPhaseStatus').textContent=tr(en,jp);};
- const PH={waiting:'待機中',planning:'作戦タイム中',answering:'回答中',finished:'終了'};
+ const PHE={waiting:'waiting',planning:'planning',answering:'answering',switching:'switching teams',revealed:'answers revealed',finished:'all turns done'};
+ const PH={waiting:'待機中',planning:'作戦タイム中',answering:'回答中',switching:'チーム交代中',revealed:'答え発表中',finished:'全員終了'};
+ const firstTeam=()=>$p('startTeamSel').value==='B'?'B':'A';
+ const otherTeam=t=>t==='A'?'B':'A';
 
+ function finishTurns(){
+  updateSession({phase:'finished',endsAt:0,activeTeam:null,activePlayer:null,activePlayerName:null,nextTeam:null});
+  setStatus('All players have answered. Use Reveal answers or Next round.','全員の回答が終わりました。「答えを表示」か「次のラウンド」へ。');
+ }
  function setTurn(team,index){
   playersRef.once('value').then(s=>{
-   const list=Object.entries(s.val()||{}).filter(([,p])=>p.team===team).sort((a,b)=>a[1].joinedAt-b[1].joinedAt);
+   const all=s.val()||{};
+   const listOf=t=>Object.entries(all).filter(([,p])=>p.team===t).sort((a,b)=>a[1].joinedAt-b[1].joinedAt);
+   const list=listOf(team);
    if(index>=list.length){
-    if(team==='A'){setTurn('B',0);}
-    else{updateSession({phase:'finished',endsAt:0,activeTeam:null,activePlayer:null,activePlayerName:null});setStatus('All players have answered. Game finished.','全員の回答が終わりました。ゲーム終了。');}
+    const first=firstTeam(),second=otherTeam(first);
+    if(team===first&&listOf(second).length){
+     if(!list.length){setTurn(second,0);return;}             // first team has nobody: go straight to the other team
+     activeTeam=second==='A'?0:1;render();
+     updateSession({phase:'switching',nextTeam:second,endsAt:now()+SWITCH_MS,activeTeam:null,activePlayer:null,activePlayerName:null,turnId:null,guess:null,result:null});
+     setStatus('Team '+team+' is done. Team '+second+' starts in 15 seconds.',team+'チーム終了。15秒後に'+second+'チームが始まります。');
+    }else finishTurns();
     return;
    }
    const [key,p]=list[index];
    activeTeam=team==='A'?0:1; render();           // keep the board's active team in sync
    const endsAt=now()+TURN_MS;
-   updateSession({phase:'answering',activeTeam:team,activePlayer:key,activePlayerName:p.name,turnIndex:index,endsAt,turnId:endsAt});
+   updateSession({phase:'answering',activeTeam:team,nextTeam:null,activePlayer:key,activePlayerName:p.name,turnIndex:index,endsAt,turnId:endsAt});
    setStatus('Now answering: Team '+team+' — '+p.name+' (player '+(index+1)+' of '+list.length+', 30 seconds)','回答中: '+team+'チーム — '+p.name+'（'+list.length+'人中'+(index+1)+'人目・30秒）');
   });
  }
@@ -536,7 +595,7 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
   activeTeam=g.team==='A'?0:1;
   let ok=false,points=0,answer='';
   if(m>=0){ok=true;revealed.add(m);points=r.a[m][1];answer=r.a[m][0];scores[activeTeam]+=points;}
-  else{strikes=Math.min(strikes+1,3);}
+  else{strikes[activeTeam]+=1;}                   // strikes are counted separately for each team
   render();
   $p('guessFeedback').textContent=ok
    ?tr(`✅ ${g.name} (Team ${g.team}): “${g.text}” → ${answer} +${points}`,`✅ ${g.name}（${g.team}チーム）:「${g.text}」→ ${answer} +${points}点`)
@@ -547,15 +606,31 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
 
  const limits=()=>({A:Math.max(1,Math.min(30,Number($p('limitA').value)||1)),B:Math.max(1,Math.min(30,Number($p('limitB').value)||1))});
  $p('saveLimits').onclick=()=>updateSession({limits:limits()});
+ $p('startTeamSel').onchange=()=>{activeTeam=firstTeam()==='A'?0:1;render();updateSession({startTeam:firstTeam()});};
  $p('startPlanning').onclick=()=>{
   lastHandledEnd=0;processedTurn=null;
-  updateSession({limits:limits(),phase:'planning',endsAt:now()+PLANNING_MS,activeTeam:null,activePlayer:null,activePlayerName:null,turnIndex:0,turnId:null,guess:null,result:null,powers:null,hints:null});
-  setStatus('Planning started: 60 seconds. Answering begins automatically.','作戦タイム開始：60秒。その後、自動で回答が始まります。');
+  activeTeam=firstTeam()==='A'?0:1;render();
+  updateSession({limits:limits(),startTeam:firstTeam(),phase:'planning',endsAt:now()+PLANNING_MS,activeTeam:null,nextTeam:null,activePlayer:null,activePlayerName:null,turnIndex:0,turnId:null,guess:null,result:null});
+  setStatus('Planning started: 60 seconds. Team '+firstTeam()+' answers first.','作戦タイム開始：60秒。'+firstTeam()+'チームが先に回答します。');
  };
- $p('nextPlayerBtn').onclick=()=>{lastHandledEnd=0;if(cur.phase==='answering')setTurn(cur.activeTeam||'A',(Number(cur.turnIndex)||0)+1);else setTurn('A',0);};
- $p('finishPhase').onclick=()=>updateSession({phase:'finished',endsAt:0,activeTeam:null,activePlayer:null,activePlayerName:null});
+ $p('nextPlayerBtn').onclick=()=>{
+  lastHandledEnd=0;
+  if(cur.phase==='answering')setTurn(cur.activeTeam||firstTeam(),(Number(cur.turnIndex)||0)+1);
+  else if(cur.phase==='switching')setTurn(cur.nextTeam||otherTeam(firstTeam()),0);
+  else setTurn(firstTeam(),0);
+ };
+ $p('revealBtn').onclick=()=>{            // reveal everything and stop all timers; only Next round / Go to round remain
+  showMissed=true;render();
+  updateSession({phase:'revealed',endsAt:0,activeTeam:null,nextTeam:null,activePlayer:null,activePlayerName:null,turnId:null});
+  setStatus('Answers revealed. Everything is stopped — press Next round when ready.','答えを表示しました。すべて停止中です。準備ができたら「次のラウンド」を押してください。');
+ };
+ $p('finishPhase').onclick=()=>updateSession({phase:'finished',endsAt:0,activeTeam:null,nextTeam:null,activePlayer:null,activePlayerName:null});
  $p('copyPlayerLink').onclick=async()=>{const u=new URL(location.href);u.search='';u.searchParams.set('player','1');try{await navigator.clipboard.writeText(u.href);setStatus('Player link copied.','プレイヤー用リンクをコピーしました。');}catch(e){prompt(tr('Copy player link:','プレイヤー用リンクをコピー:'),u.href);}};
  $p('clearSession').onclick=()=>{if(confirm(tr('Remove all players, chat, hints and phase state? Players will have to join again.','全プレイヤー、チャット、ヒント、進行状況を消去します。プレイヤーは再参加が必要です。')))sessionRef.remove().then(()=>{processedTurn=null;setStatus('Session cleared. Old devices will be asked to join again.','消去しました。以前の端末は再参加が必要になります。');});};
+
+ // "How to play" is also shown on every player's screen; closing it on the host closes it for everyone
+ $p('rulesBtn').addEventListener('click',()=>updateSession({rules:{open:true,at:now()}}));
+ $p('modalClose').addEventListener('click',()=>{if(cur.rules&&cur.rules.open)updateSession({rules:{open:false,at:cur.rules.at}});});
 
  function renderRoster(){
   const names=t=>Object.values(cur.players||{}).filter(p=>p.team===t).sort((a,b)=>a.joinedAt-b.joinedAt).map(p=>escapeHtml(p.name));
@@ -566,22 +641,26 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
  sessionRef.on('value',s=>{
   cur=s.val()||{};
   if(cur.limits){$p('limitA').value=cur.limits.A;$p('limitB').value=cur.limits.B;}
+  if(cur.startTeam&&document.activeElement!==$p('startTeamSel'))$p('startTeamSel').value=cur.startTeam;
   renderRoster();
   const g=cur.guess;
   if(g&&cur.phase==='answering'&&g.turn===cur.turnId&&g.key===cur.activePlayer&&processedTurn!==g.turn){processedTurn=g.turn;handleGuess(g);}
  });
 
- // Host-driven automatic clock: planning → answering → each next player → next team → finished
+ // Host-driven automatic clock: planning → each player (30s) → 15s countdown → other team → done
  setInterval(()=>{
   const phase=cur.phase||'waiting',end=Number(cur.endsAt||0);
-  const left=(phase==='planning'||phase==='answering')&&end?Math.max(0,Math.ceil((end-now())/1000)):null;
+  const left=leftSecs(cur);
   $p('hostClock').textContent=left===null?'—':left+tr('s','秒');
-  $p('hostPhaseName').textContent=phase==='answering'?tr('Answering: Team '+cur.activeTeam+' — '+(cur.activePlayerName||''),'回答中: '+cur.activeTeam+'チーム — '+(cur.activePlayerName||'')):tr('Phase: '+phase,'フェーズ: '+(PH[phase]||phase));
+  $p('hostPhaseName').textContent=phase==='answering'?tr('Answering: Team '+cur.activeTeam+' — '+(cur.activePlayerName||''),'回答中: '+cur.activeTeam+'チーム — '+(cur.activePlayerName||''))
+   :phase==='switching'?tr('Team '+cur.nextTeam+' starts in…',cur.nextTeam+'チーム開始まで…')
+   :tr('Phase: '+(PHE[phase]||phase),'フェーズ: '+(PH[phase]||phase));
   renderRoster();
   if(left===null||left>0||lastHandledEnd===end)return;
   lastHandledEnd=end;
-  if(phase==='planning')setTurn('A',0);
-  else if(phase==='answering')setTurn(cur.activeTeam||'A',(Number(cur.turnIndex)||0)+1);
+  if(phase==='planning')setTurn(firstTeam(),0);
+  else if(phase==='answering')setTurn(cur.activeTeam||firstTeam(),(Number(cur.turnIndex)||0)+1);
+  else if(phase==='switching')setTurn(cur.nextTeam||otherTeam(firstTeam()),0);
  },250);
 })();
 </script>
