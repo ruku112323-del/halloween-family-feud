@@ -107,6 +107,13 @@ button:disabled { opacity:.38; cursor:not-allowed; }
 body.host-jinro .jinro-only, body.mode-jinro .jinro-only { display:block; }
 body.host-jinro .feud-only, body.mode-jinro .feud-only { display:none !important; }
 body.viewer #gameTabs { display:none !important; }
+/* ===== "WHO IS PLAYING" mini box (player screen): a tiny pill that opens into a small list of names ===== */
+.who { position:fixed; right:10px; bottom:10px; z-index:3; display:flex; flex-direction:column-reverse; align-items:flex-end; gap:6px; max-width:60vw; }
+.who-btn { padding:3px 9px; font-size:12px; border-radius:999px; background:#1c3049; color:#fff; border:1px solid #3d5b80; opacity:.92; }
+.who-list { display:none; min-width:110px; max-height:40vh; overflow:auto; background:#17283f; color:#f4f8ff; border:1px solid #3d5b80; border-radius:12px; padding:8px 12px; font-size:13px; line-height:1.6; box-shadow:0 8px 24px #0008; }
+.who.open .who-list { display:block; }
+.who-list .now { color:var(--site-secondary); font-weight:800; }
+#playerApp { padding-bottom:64px; }
 .jgrid { display:flex; flex-wrap:wrap; gap:8px; }
 .jbtn { padding:10px 14px; background:#1e3350; color:#fff; border:2px solid #3d5b80; border-radius:12px; }
 .jbtn.sel { border-color:var(--site-secondary); background:#21406a; }
@@ -256,8 +263,10 @@ body.player-mode #playerApp { display:block; }
 
 <!-- ================= PLAYER SCREEN (?player=1) ================= -->
 <div id="playerApp">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h1>⭐ NAKAMAFEUD</h1><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-muted" id="pRulesBtn">📖 How to play / 遊び方</button><button class="btn-muted" id="pLangBtn">日本語表示 / Show Japanese: OFF</button></span></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h1 id="pTitle">⭐ NAKAMAFEUD</h1><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-muted" id="pRulesBtn">📖 How to play / 遊び方</button><button class="btn-muted" id="pLangBtn">日本語表示 / Show Japanese: OFF</button></span></div>
   <section class="phase-card" id="joinCard">
+    <!-- tells the player which game the host has open (NAKAMAFEUD or Jinro); updated live by setMode() in script 3 -->
+    <div class="turn" id="joinGame">🎮 Now playing: <b>NAKAMAFEUD</b> <span class="jp">/ 今回のゲーム：<b>NAKAMAFEUD（クイズ）</b></span></div>
     <h2>Join your team / チームを選ぶ</h2>
     <label for="playerName">Your name / 名前</label>
     <input id="playerName" maxlength="24" placeholder="Enter your name / 名前を入力">
@@ -265,6 +274,8 @@ body.player-mode #playerApp { display:block; }
     <p id="joinMessage" class="small-note"></p>
   </section>
   <section class="player-hidden" id="playerGame">
+    <!-- "who is playing": tiny pill (👥 count); tap to open a small list with only the names, tap again to shrink it -->
+    <div class="who" id="whoBox"><button type="button" class="who-btn" id="whoBtn" aria-expanded="false" aria-label="Who is playing / 参加者">👥 <span id="whoCount">0</span></button><div class="who-list" id="whoList"></div></div>
     <div class="eyebrow feud-only" id="playerTeamLabel"></div>
     <!-- ===== JINRO PLAYER SCREEN (replaces the feud parts while the host is on the Jinro tab) ===== -->
     <div class="eyebrow jinro-only" id="jName"></div>
@@ -592,6 +603,7 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
  const $p=id=>document.getElementById(id);           // short helper: find an element by id
  // ---- local (this device only) variables ----
  let myTeam=null,myName='',myKey='',sessionData={},chatRef=null,serverOffset=0,answeredTurn=null;
+ let whoSig='';   // remembers the last names drawn in the 'who is playing' box (so it is only redrawn when something changes)
  let dismissedRules=null,dismissedOver=null,shown={kind:null,at:null};   // which pop-up (rules / game over) a player has open or closed
  // Firebase server clock offset, so every phone's countdown matches the host's
  const now=()=>Date.now()+serverOffset;
@@ -625,6 +637,8 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
   };
   $p('pLangBtn').onclick=()=>setLang(!playerJP);
   $p('pRulesBtn').onclick=()=>openModal(RULES_TITLE,rulesHTML());   // players can re-open "How to play" themselves
+  // The tiny "who is playing" pill: tap to open / shrink the list of names
+  $p('whoBtn').onclick=()=>{const o=$p('whoBox').classList.toggle('open');$p('whoBtn').setAttribute('aria-expanded',String(o));};
 
   // ---- Pop-ups the HOST pushes to every player: "How to play" and "Game over" ----
   // When the player presses "Got it!", remember it so the same pop-up does not re-open.
@@ -778,6 +792,13 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
    }
    [0,1].forEach(t=>{$p('pScore'+t).textContent=scores[t];$p('pTeam'+t).classList.toggle('active',t===activeTeam);});
    $p('pStrikes').textContent=strikeText();
+   // "Who is playing" box — names only. In Jinro it lists the players dealt into the game; in NAKAMAFEUD everybody who joined.
+   // In NAKAMAFEUD the player whose turn it is right now is shown in orange.
+   const pj=(appMode==='jinro'&&typeof jinroPubPlayers==='function')?jinroPubPlayers():null;
+   const entries=pj&&Object.keys(pj).length?Object.entries(pj):Object.entries(s.players||{}).sort((a,b)=>(a[1].joinedAt||0)-(b[1].joinedAt||0)).map(([k,p])=>[k,p.name]);
+   const whoHtml=entries.map(([k,n])=>'<div'+(appMode!=='jinro'&&phase==='answering'&&k===s.activePlayer?' class="now"':'')+'>'+escapeHtml(n)+'</div>').join('')||'—';
+   if(whoHtml!==whoSig){whoSig=whoHtml;$p('whoList').innerHTML=whoHtml;}
+   $p('whoCount').textContent=entries.length;
    // Hint power buttons (grey out the ones my team already used) + the hints my team received
    const usedP=(s.powers&&s.powers[myTeam])||{};const canUse=phase==='planning'||phase==='answering'||phase==='switching';
    [['pwWord','word'],['pwPicture','picture'],['pwChoice','choice']].forEach(([id,k])=>{const b=$p(id);b.disabled=!!usedP[k]||!canUse;b.classList.toggle('used',!!usedP[k]);});
@@ -999,7 +1020,17 @@ if(!viewerMode){let loadedFromFirebase=false;const loadLocal=()=>{try{const loca
 
  // ---------- MODE: feud <-> jinro (set by the host's tab; players follow) ----------
  // appMode lives in script 1. The body class hides/shows the right parts of the page.
- function setMode(m){appMode=m==='jinro'?'jinro':'feud';document.body.classList.toggle(playerMode?'mode-jinro':'host-jinro',appMode==='jinro');}
+function setMode(m){
+  appMode=m==='jinro'?'jinro':'feud';
+  document.body.classList.toggle(playerMode?'mode-jinro':'host-jinro',appMode==='jinro');
+  if(playerMode){   // the player's title, browser tab name and "Now playing" badge always name the game that is open
+   const jin=appMode==='jinro';
+   $j('pTitle').textContent=jin?'🐺 人狼 JINRO':'⭐ NAKAMAFEUD';
+   document.title=jin?'人狼 Jinro':'NAKAMAFEUD';
+   $j('joinGame').innerHTML=jin?'🎮 Now playing: <b>JINRO — One Night Werewolf</b> <span class="jp">/ 今回のゲーム：<b>人狼（一夜人狼）</b></span>':'🎮 Now playing: <b>NAKAMAFEUD</b> <span class="jp">/ 今回のゲーム：<b>NAKAMAFEUD（クイズ）</b></span>';
+  }
+ }
+ window.jinroPubPlayers=()=>pub.players||null;   // lets script 2's "who is playing" box read the Jinro player list
  const secLeft=p=>p&&p.endsAt&&(p.phase==='night'||p.phase==='day'||p.phase==='vote')?Math.max(0,Math.ceil((p.endsAt-now())/1000)):null;
  const mmss=s=>s===null?'—':Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
  let pub={};                                       // the public game data (jinro/pub)
